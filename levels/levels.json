@@ -1,0 +1,1200 @@
+{
+	"sets": [
+		{
+			"id": "intro", "title": "Intro Levels", "label": "Intro",
+			"levels": [
+				{
+					"id": "intro_walk", "title": "First Steps",
+					"hint": "The Quaggles need to get home. Use the WASD or Arrow keys to get them to glowing  goal. Getting one Quaggle to the goal is good enough, they believe in collectivism.",
+					"floors": [
+						[
+							"",
+							" ... s",
+							" . . .",
+							" . g .",
+							" .   .",
+							" ....."
+						]
+					]
+				},
+				{
+					"id": "intro_drop", "title": "Drop Down",
+					"hint": "Quaggles don't mind falls, as long as there is something to land on. You can rotate the camera by holding down the right mouse button and dragging, or with Q and E.",
+					"floors": [
+						[
+							"* ****",
+							"* **.*",
+							"* **..",
+							"****.g"
+						],
+						[
+							"s",
+							"   *",
+							"   *",
+							"   *"
+						]
+					]
+				},
+				{
+					"id": "intro_head", "title": "Lend a Head",
+					"hint": "Press N to switch quaggles. Park one under the gap and the other can walk across its head.",
+					"floors": [
+						[
+							" .......",
+							" .......",
+							" .....1."
+						],
+						[
+							"",
+							" s.. ..g"
+						]
+					]
+				},
+				{
+					"id": "intro_carry", "title": "Piggyback",
+					"hint": "A quaggle carries whoever is standing on its head. Step on, switch, and ride across.",
+					"floors": [
+						[
+							" ........",
+							" ........",
+							" ..1....."
+						],
+						[
+							"",
+							" s.   ..g"
+						]
+					]
+				},
+				{
+					"id": "intro_ice", "title": "Slippery",
+					"hint": "On ice you slide until something stops you. Use the walls.",
+					"floors": [
+						[
+							"*********",
+							"*s.xxxxx*",
+							"***xxx*x*",
+							"  *xxxxx*",
+							"  *x*xxx*",
+							"  *xxgxx*",
+							"  *******"
+						]
+					]
+				},
+				{
+					"id": "intro_key", "title": "Lock and Key",
+					"hint": "A force field is solid until you are carrying the key.",
+					"floors": [
+						[
+							"*********",
+							"*2..s.3g*",
+							"*********"
+						]
+					]
+				},
+				{
+					"id": "intro_fire", "title": "Firefighter",
+					"hint": "Fire burns up the quaggle that steps in it, but that puts the fire out for everyone else.",
+					"floors": [
+						[
+							"********",
+							"*s..X.g*",
+							"*1..X..*",
+							"********"
+						]
+					]
+				},
+				{
+					"id": "intro_crack", "title": "Crumbling",
+					"hint": "Cracked tiles fall away once you step off them. There is no going back.",
+					"floors": [
+						[
+							"***********",
+							"*2.s.44.3g*",
+							"***********"
+						]
+					]
+				},
+				{
+					"id": "intro_lift", "title": "Going Up",
+					"hint": "Step into the rising rings to ride up one floor.",
+					"floors": [
+						[
+							"******",
+							"*s..u*",
+							"******"
+						],
+						[
+							"",
+							"     ..g"
+						]
+					]
+				},
+				{
+					"id": "intro_walls", "title": "High Road",
+					"hint": "You can walk along the tops of walls and glass from the floor above.",
+					"floors": [
+						[
+							"*******",
+							"*s.u***",
+							"*****.g"
+						],
+						[
+							""
+						]
+					]
+				}
+			]
+		},
+		{
+			"id": "easy", "title": "Easy Levels", "label": "Easy",
+			"levels": [
+				{
+					"id": "cold_key", "title": "Cold Key",
+					"hint": "",
+					"floors": [
+						[
+							"***********",
+							"*s.xxxxxx.*",
+							"*********.*",
+							"*2xxxxxxx.*",
+							"*********.*",
+							"*g3xxxxxx.*",
+							"***********"
+						]
+					]
+				},
+				{
+					"id": "bumper", "title": "Bumper Cars",
+					"hint": "",
+					"floors": [
+						[
+							"*********",
+							"*s1xxxxx*",
+							"******g**"
+						]
+					]
+				},
+				{
+					"id": "up_and_over", "title": "Up and Over",
+					"hint": "",
+					"floors": [
+						[
+							"*******",
+							"*s.u*2*.3g",
+							"*...*u*",
+							"*******"
+						],
+						[
+							""
+						]
+					]
+				},
+				{
+					"id": "leap_of_faith", "title": "Leap of Faith",
+					"hint": "",
+					"floors": [
+						[
+							"",
+							"   ..",
+							" ....",
+							" u"
+						],
+						[
+							"",
+							" s.442",
+							"",
+							"  3g"
+						]
+					]
+				},
+				{
+					"id": "ice_bridge", "title": "Ice Bridge",
+					"hint": "",
+					"floors": [
+						[
+							" .....",
+							" .....",
+							" ..1.."
+						],
+						[
+							"",
+							" s.xx xx.g"
+						]
+					]
+				},
+				{
+					"id": "ferry", "title": "Ferry Service",
+					"hint": "",
+					"floors": [
+						[
+							" ....",
+							" ..........",
+							" ..1."
+						],
+						[
+							"",
+							" s.  2  .3g"
+						]
+					]
+				},
+				{
+					"id": "hot_ice", "title": "Hot Ice",
+					"hint": "",
+					"floors": [
+						[
+							"**********",
+							"*s.xxxxX.*",
+							"*1.xx*xx.*",
+							"****xxxx.*",
+							"   *xxX*g*",
+							"   *******"
+						]
+					]
+				},
+				{
+					"id": "stay_behind", "title": "Stay Behind",
+					"hint": "",
+					"floors": [
+						[
+							".......",
+							"s1.u...",
+							"......."
+						],
+						[
+							"",
+							"    .  .g"
+						]
+					]
+				},
+				{
+					"id": "cold_fire", "title": "Cold Fire",
+					"hint": "",
+					"floors": [
+						[
+							"***********",
+							"*s.xxxxxx.*",
+							"*1.x*xxXx.*",
+							"***xxx*xx**",
+							"*2xxxxxxx**",
+							"***x*xxx3g*",
+							"***********"
+						]
+					]
+				},
+				{
+					"id": "rooftops", "title": "Rooftops",
+					"hint": "",
+					"floors": [
+						[
+							"",
+							"s1u**.**23g",
+							"......"
+						],
+						[
+							""
+						]
+					]
+				},
+				{
+					"id": "key_relay", "title": "Key Relay",
+					"hint": "",
+					"floors": [
+						[
+							"*********",
+							"*s.X.2*",
+							"*1....X3g",
+							"*1*******"
+						]
+					]
+				},
+				{
+					"id": "fire_drill", "title": "Fire Drill",
+					"hint": "",
+					"floors": [
+						[
+							".....",
+							"1....X....",
+							"1...."
+						],
+						[
+							"",
+							"   s.  ..g"
+						]
+					]
+				},
+				{
+					"id": "level4", "title": "Keymaster",
+					"hint": "",
+					"floors": [
+						[
+							"",
+							"",
+							"",
+							"    *   *",
+							"****.* *.******",
+							"XXXX......X3g.*",
+							"",
+							".. .. .. .. ..",
+							"wwwwwwwwwwwwww",
+							"wwwwwwwwwwwwww",
+							".. .. .. .. .."
+						],
+						[
+							"****** ***",
+							"*....* *1*",
+							"*s..2* *.*",
+							"*....* *.*",
+							"****.* *.*"
+						]
+					]
+				},
+				{
+					"id": "level5", "title": "Elevator Pitch",
+					"hint": "",
+					"floors": [
+						[
+							"",
+							"",
+							"",
+							"    *   *",
+							"****.* *.******",
+							"XXXXu...u.X3g.*",
+							"",
+							".. .. .. .. ..",
+							"wwwwwwwwwwwwww",
+							"wwwwwwwwwwwwww",
+							".. .. .. .. .."
+						],
+						[
+							"****** ***",
+							"*....* *1*",
+							"*s..2* *.*",
+							"*....* *.*",
+							"****.* *.*"
+						]
+					]
+				},
+				{
+					"id": "level2", "title": "The Long Way Down",
+					"hint": "",
+					"floors": [
+						[
+							"          w.w",
+							"          w.w",
+							"          w.w",
+							"          w.w*****",
+							"   *wwwwwww.w.....",
+							"   *..........   *",
+							"   ***          ...",
+							"                .g.",
+							"                ..."
+						],
+						[
+							"wwwwwwwwwww",
+							"*s.........",
+							"*..........",
+							"*..........",
+							"****.******",
+							"",
+							"   *1*",
+							"   ***"
+						]
+					]
+				},
+				{
+					"id": "level1", "title": "Stepping Stone",
+					"hint": "",
+					"floors": [
+						[
+							"         *************",
+							"         *...........*",
+							"         *...........*",
+							"         *...........*",
+							"         *...........*",
+							"         *...........*",
+							"         *......14444*",
+							"         *************"
+						],
+						[
+							"**********************",
+							"*.......... .........*",
+							"*s......... .....g...*",
+							"*.......... .........*",
+							"**********************"
+						]
+					]
+				},
+				{
+					"id": "level3", "title": "Burnt Bridge",
+					"hint": "",
+					"floors": [
+						[
+							"         *************",
+							"         *...........*",
+							"         *...........*",
+							"         *...........*",
+							"         *...........*",
+							"         *...........*",
+							"         *......1....*",
+							"         *************"
+						],
+						[
+							"**********************",
+							"*.........X .........*",
+							"*s........X .....g...*",
+							"*s........X .........*",
+							"**********************"
+						]
+					]
+				},
+				{
+					"id": "level6", "title": "Ice Hall",
+					"hint": "",
+					"floors": [
+						[
+							"          w*w",
+							"          w.w",
+							"          w.w",
+							"          w.w",
+							"          w.w",
+							"          w.w",
+							"          w.w",
+							"ww        w.w  w    w",
+							"..        w1w  u    .",
+							"....................."
+						],
+						[
+							"*******...*************************",
+							"*s..wxxx*xx XX..3....xxxxxxxx*xxxx*",
+							"*...wxxxxx* XX..3....xxxXxxxxxxxxx*",
+							"*...xxxXxxx XXX.3....xxx*xxxxx*xXx*",
+							"*...xxxxXxx 2.X.3....XxxxxxxxxxxXx*",
+							"*...xxxxX*x XXX.3....xxxxxxx*xx*33*",
+							"*1..xxxx*xx XX..3....xxx*xxxxxx*3g*",
+							"*.*************.****.**************"
+						]
+					]
+				},
+				{
+					"id": "level7", "title": "Glass Maze",
+					"hint": "",
+					"floors": [
+						[
+							"***********.***.*.***",
+							"*..wwXXXXXwXw...w..s*",
+							"*g.wwwwwwwxxw...wu.1*",
+							"*..wwwwwwwxxw...w..1*",
+							"*..wwxxxxxxxw...w...*",
+							"*..wwxxxxxxxw...w...*",
+							"*****x*X***w***.*.***",
+							"    wxxxxxxxw  ...",
+							"     wwxxxxxxxxxx.",
+							"   wxxxxxxxxw    x",
+							"    x xw   x     x",
+							"    x x    xxxxxxxw",
+							"    x x    w",
+							"    xxx",
+							"    w"
+						]
+					]
+				},
+				{
+					"id": "level8", "title": "Quaggles' Quandary",
+					"hint": "",
+					"floors": [
+						[
+							"  ******************",
+							"  *..............***.u1",
+							"  *.            *xxx.",
+							"  *. *          xxxxxxxxxxx*",
+							"su*.*.***g      xx  .     x",
+							"   * .  *       xx  .     x",
+							"     ...x......*xxxxxxxxxxx1",
+							"        x       xx  *     x",
+							"       *xxxxxxxxxx        x",
+							"                *xxxxxxxxxx",
+							"                          *"
+						]
+					]
+				}
+			]
+		},
+		{
+			"id": "medium", "title": "Medium Levels", "label": "Medium",
+			"levels": [
+				{
+					"id": "step_stool", "title": "Step Stool",
+					"hint": "From the top of a lift you can step onto a friend's head. They can carry you from there.",
+					"stack": 2,
+					"floors": [
+						[
+							"s1.u",
+							"....",
+							"...."
+						],
+						[
+							"",
+							"",
+							"g"
+						]
+					]
+				},
+				{
+					"id": "going_up", "title": "Going Up Together",
+					"hint": "A lift raises the quaggle who steps in and everyone stacked on top of them.",
+					"stack": 2,
+					"floors": [
+						[
+							"s1.u",
+							"...."
+						],
+						[
+							""
+						],
+						[
+							"  g"
+						]
+					]
+				},
+				{
+					"id": "wall_to_wall", "title": "Wall to Wall",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							"s1u**...*",
+							"........."
+						],
+						[
+							"         g"
+						]
+					]
+				},
+				{
+					"id": "low_bridge", "title": "Low Bridge",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							" s.xxxxx*",
+							"      .3g"
+						],
+						[
+							"1    ..2"
+						]
+					]
+				},
+				{
+					"id": "one_trip", "title": "One Trip",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							"  u",
+							"s1.444Xg"
+						]
+					]
+				},
+				{
+					"id": "ice_step", "title": "Cold Feet",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							"s1u*x*"
+						],
+						[
+							"      g"
+						]
+					]
+				},
+				{
+					"id": "totem_pole", "title": "Totem Pole",
+					"hint": "A whole stack can step from the lift top onto another head. Then send the new bottom quaggle into the lift.",
+					"stack": 3,
+					"floors": [
+						[
+							"s.u",
+							"11."
+						],
+						[
+							""
+						],
+						[
+							""
+						],
+						[
+							" g"
+						]
+					]
+				},
+				{
+					"id": "smuggler", "title": "Smuggler",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							"1s2.u.3.Xg"
+						]
+					]
+				},
+				{
+					"id": "catch_me", "title": "Catch Me",
+					"hint": "",
+					"floors": [
+						[
+							".....s1u",
+							".      *",
+							".xxxxxxx",
+							"      x*",
+							"      g"
+						]
+					]
+				},
+				{
+					"id": "clothesline", "title": "Clothesline",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							" s.xxxxxx*",
+							"     x",
+							"     x",
+							"     g"
+						],
+						[
+							"1     *"
+						]
+					]
+				},
+				{
+					"id": "ricochet", "title": "Ricochet",
+					"hint": "On ice you only stop at walls, bare floor and other quaggles. Use each other as buffers.",
+					"floors": [
+						[
+							"*******",
+							"*xxx*x*",
+							"*xxxxx*",
+							"*xg*xx*",
+							"*x*sxx*",
+							"*xx1xx*",
+							"*******"
+						]
+					]
+				},
+				{
+					"id": "double_decker", "title": "Double Decker",
+					"hint": "",
+					"stack": 3,
+					"floors": [
+						[
+							"  .....",
+							"  ....1"
+						],
+						[
+							"",
+							"1."
+						],
+						[
+							"s.   .g"
+						]
+					]
+				},
+				{
+					"id": "eggshells", "title": "Eggshells",
+					"hint": "",
+					"floors": [
+						[
+							"s4444",
+							" 44 43g",
+							" 442 ",
+							" 4444"
+						]
+					]
+				},
+				{
+					"id": "leapfrog", "title": "Leapfrog",
+					"hint": "",
+					"floors": [
+						[
+							"   .   .   .",
+							"   .u  .u"
+						],
+						[
+							"s1. ... ... .g"
+						]
+					]
+				},
+				{
+					"id": "fire_brigade", "title": "Fire Brigade",
+					"hint": "",
+					"stack": 3,
+					"floors": [
+						[
+							"  u",
+							"s11.444X.Xg"
+						]
+					]
+				},
+				{
+					"id": "moving_day", "title": "Moving Day",
+					"hint": "",
+					"stack": 3,
+					"floors": [
+						[
+							"s.u....",
+							"11....."
+						],
+						[
+							"     *",
+							"   *"
+						],
+						[
+							"      g"
+						]
+					]
+				},
+				{
+					"id": "skyhook", "title": "Skyhook",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							"*******",
+							"*xxx*s*",
+							"*xxxxx*",
+							"*xxxxx*",
+							"*xxx*x*",
+							"*xxxxx*",
+							"*******"
+						],
+						[
+							"wwwwwww",
+							"w     w",
+							"w  g 1w",
+							"w     w",
+							"w  * *w",
+							"w*    w",
+							"wwwwwww"
+						]
+					]
+				},
+				{
+					"id": "key_fetch", "title": "Round Trip",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							"us1....."
+						],
+						[
+							"        2"
+						],
+						[
+							" 3g"
+						]
+					]
+				},
+				{
+					"id": "no_way_back", "title": "No Way Back",
+					"hint": "",
+					"floors": [
+						[
+							"s44 24",
+							" 4  44",
+							" 4 444",
+							" 444 43g"
+						]
+					]
+				},
+				{
+					"id": "pinball", "title": "Pinball",
+					"hint": "",
+					"floors": [
+						[
+							"********",
+							"*xxxxx**",
+							"*xxxxxx*",
+							"*xxxxxx*",
+							"*xxxxxx*",
+							"*x*g*xx*",
+							"*1x*xxs*",
+							"********"
+						]
+					]
+				}
+			]
+		},
+		{
+			"id": "hard", "title": "Hard Levels", "label": "Hard",
+			"levels": [
+				{
+					"id": "skyscraper", "title": "Skyscraper",
+					"hint": "",
+					"stack": 4,
+					"floors": [
+						[
+							"s1u",
+							"11."
+						],
+						[
+							""
+						],
+						[
+							""
+						],
+						[
+							""
+						],
+						[
+							"   g"
+						]
+					]
+				},
+				{
+					"id": "high_wire", "title": "High Wire",
+					"hint": "",
+					"stack": 4,
+					"floors": [
+						[
+							"  ...",
+							"  ..1"
+						],
+						[
+							"",
+							"1."
+						],
+						[
+							"",
+							"1."
+						],
+						[
+							"s.   .g"
+						]
+					]
+				},
+				{
+					"id": "tightrope", "title": "Tightrope",
+					"hint": "",
+					"floors": [
+						[
+							" 44444",
+							" 442  ",
+							"s44 443g",
+							"  4 4 ",
+							"  444 "
+						]
+					]
+				},
+				{
+					"id": "air_mail", "title": "Air Mail",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							"*******",
+							"*xs*xx*",
+							"*xxxxx*",
+							"*xx*xx*",
+							"*xxxxx*",
+							"*xxxxx*",
+							"*******"
+						],
+						[
+							"wwwwwww",
+							"w1    w",
+							"w*    w",
+							"w    gw",
+							"w     w",
+							"w **  w",
+							"wwwwwww"
+						]
+					]
+				},
+				{
+					"id": "skeleton_key", "title": "Skeleton Key",
+					"hint": "",
+					"floors": [
+						[
+							"*******",
+							"g3xxxx*",
+							"*1xxxx*",
+							"**xxx**",
+							"*2xxxx*",
+							"*sxxxx*",
+							"*******"
+						]
+					]
+				},
+				{
+					"id": "bobsled", "title": "Bobsled",
+					"hint": "",
+					"stack": 3,
+					"floors": [
+						[
+							"         *",
+							"s.u.xxxxxx*",
+							"11..xxxxxx*"
+						],
+						[
+							"",
+							"      *"
+						],
+						[
+							"",
+							"         g"
+						]
+					]
+				},
+				{
+					"id": "bucket_brigade", "title": "Bucket Brigade",
+					"hint": "",
+					"stack": 4,
+					"floors": [
+						[
+							"  u",
+							"s111.44X.X.."
+						],
+						[
+							"",
+							"            g"
+						]
+					]
+				},
+				{
+					"id": "snake", "title": "Snake Charmer",
+					"hint": "",
+					"floors": [
+						[
+							" 44444 ",
+							" 4 4 44",
+							"s4 2 4 ",
+							" 4 4 443g",
+							" 4 4   ",
+							" 44444 "
+						]
+					]
+				},
+				{
+					"id": "overhead", "title": "Special Delivery",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							"*******",
+							"*xxxxx*",
+							"*xxxxx*",
+							"*xx*xx*",
+							"*xxxsx*",
+							"**xxxx*",
+							"*******"
+						],
+						[
+							"wwwwwww",
+							"w     w",
+							"w    *w",
+							"wg  1*w",
+							"w *   w",
+							"w     w",
+							"wwwwwww"
+						]
+					]
+				},
+				{
+					"id": "hot_potato", "title": "Hot Potato",
+					"hint": "",
+					"floors": [
+						[
+							"*******",
+							"*xxxxx*",
+							"*xxxsx*",
+							"**xx*1*",
+							"*xxxg**",
+							"*xXxxx*",
+							"*******"
+						]
+					]
+				},
+				{
+					"id": "crown_jewel", "title": "Crown Jewel",
+					"hint": "",
+					"stack": 3,
+					"floors": [
+						[
+							"us11....."
+						],
+						[
+							"         2"
+						],
+						[
+							""
+						],
+						[
+							" 3g"
+						]
+					]
+				},
+				{
+					"id": "thin_ice", "title": "Over the Edge",
+					"hint": "",
+					"floors": [
+						[
+							"********",
+							"*xxxxxx*",
+							"*1xxxxx ",
+							"*s**gxx ",
+							"*xx*xx  ",
+							"*xxxxx *",
+							"*****  *"
+						]
+					]
+				},
+				{
+					"id": "hang_time", "title": "Hang Time",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							"********",
+							"*xxsx1x*",
+							"*xxx*xx*",
+							"*xxxxxx*",
+							"*xxxxx**",
+							"*xxxxx**",
+							"********"
+						],
+						[
+							"wwwwwwww",
+							"w 1    w",
+							"w      w",
+							"w  *   w",
+							"w**    w",
+							"w   g* w",
+							"wwwwwwww"
+						]
+					]
+				},
+				{
+					"id": "labyrinth", "title": "Labyrinth",
+					"hint": "",
+					"floors": [
+						[
+							"   444 4",
+							"  24 44 ",
+							"  44 4 43g",
+							"   44444",
+							" 4 4 4 4",
+							"s444  44"
+						]
+					]
+				},
+				{
+					"id": "threes_company", "title": "Three's Company",
+					"hint": "",
+					"floors": [
+						[
+							"********",
+							"*xxx1xx*",
+							"*xxxx **",
+							"*1*xxxx*",
+							"*xsx xx*",
+							"*xxxx g*",
+							"*xx*xxx*",
+							"********"
+						]
+					]
+				},
+				{
+					"id": "burn_notice", "title": "Burn Notice",
+					"hint": "",
+					"floors": [
+						[
+							"********",
+							"*g *xx**",
+							"*xxxxxX*",
+							"**xxxxs*",
+							"*x1xxxX*",
+							"*x*xxxx*",
+							"*xxxxxx*",
+							"********"
+						]
+					]
+				},
+				{
+					"id": "sky_relay", "title": "Sky Relay",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							"********",
+							"*xx*xxx*",
+							"*x1*xxx*",
+							"*xxxxxx*",
+							"*xxxxxx*",
+							"*xxx*xs*",
+							"********"
+						],
+						[
+							"wwwwwwww",
+							"w      w",
+							"w*     w",
+							"w *    w",
+							"w*    1w",
+							"wg   * w",
+							"wwwwwwww"
+						]
+					]
+				},
+				{
+					"id": "triple_axel", "title": "Triple Axel",
+					"hint": "",
+					"floors": [
+						[
+							"********",
+							"*xxxxx1*",
+							"*xxxxx *",
+							"**xx xx*",
+							"*xs*gxx*",
+							"*xxx*x *",
+							"*xxx1xx*",
+							"********"
+						]
+					]
+				},
+				{
+					"id": "zamboni", "title": "Zamboni",
+					"hint": "",
+					"floors": [
+						[
+							"*********",
+							"*x x xxx*",
+							"**xxxx*x*",
+							"*xxgxxxx*",
+							"**xxxx*x*",
+							"*xxxxxxx*",
+							"*x1*xx*x*",
+							"*xxxxxxs*",
+							"*********"
+						]
+					]
+				},
+				{
+					"id": "cold_case", "title": "Cold Case",
+					"hint": "",
+					"floors": [
+						[
+							"*********",
+							"*xx2*xx3g",
+							" xx*xxx1 ",
+							" xxx*s*x ",
+							" *xxxx  *",
+							"*xxxxxxx*",
+							"*xxxxxxx*",
+							"*********"
+						]
+					]
+				}
+			]
+		}
+	]
+}
