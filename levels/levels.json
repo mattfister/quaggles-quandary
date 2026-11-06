@@ -37,109 +37,103 @@
 				},
 				{
 					"id": "intro_head", "title": "Lend a Head",
-					"hint": "Press N to switch quaggles. Park one under the gap and the other can walk across its head.",
+					"hint": "Press Tab or N to switch Quaggles. They're so chill they don't even mind when someone walks all over them. They can carry other Quaggles too. No sweat!",
 					"floors": [
 						[
-							" .......",
-							" .......",
-							" .....1."
+							"*.*..***",
+							"*.*..***",
+							"*.*..***",
+							"*......1"
 						],
 						[
+							"  *    g",
 							"",
-							" s.. ..g"
-						]
-					]
-				},
-				{
-					"id": "intro_carry", "title": "Piggyback",
-					"hint": "A quaggle carries whoever is standing on its head. Step on, switch, and ride across.",
-					"floors": [
-						[
-							" ........",
-							" ........",
-							" ..1....."
-						],
-						[
-							"",
-							" s.   ..g"
+							"  w",
+							"s w"
 						]
 					]
 				},
 				{
 					"id": "intro_ice", "title": "Slippery",
-					"hint": "On ice you slide until something stops you. Use the walls.",
+					"hint": "Quaggles can ice skate. This is good for them, because they care about physical fitness.",
 					"floors": [
 						[
-							"*********",
-							"*s.xxxxx*",
-							"***xxx*x*",
-							"  *xxxxx*",
-							"  *x*xxx*",
-							"  *xxgxx*",
-							"  *******"
+							"   ......",
+							" s.xxxxx.",
+							"   xx*xx",
+							"   xxxxx",
+							"   x*xxx",
+							"   xxgxx.",
+							"   .xxxx."
 						]
 					]
 				},
 				{
 					"id": "intro_key", "title": "Lock and Key",
-					"hint": "A force field is solid until you are carrying the key.",
+					"hint": "Quaggles love freedom and hate barriers. In 10th grade Quaggles learn about symbolism. Keys symbolize freedom. Forcefields symbolize barriers, but are unlocked by keys.",
 					"floors": [
 						[
-							"*********",
-							"*2..s.3g*",
-							"*********"
+							" *",
+							" x..s.3g",
+							"xxx x",
+							"x2*xx",
+							"xxxxxx",
+							" xxxxx",
+							"*xxxx",
+							"    *"
 						]
 					]
 				},
 				{
 					"id": "intro_fire", "title": "Firefighter",
-					"hint": "Fire burns up the quaggle that steps in it, but that puts the fire out for everyone else.",
+					"hint": "Fire is a deadly enemy to Quaggles. But Quaggles are so chill and happy to help friends, that they'll even sacrifice themeselves to put out a fire.",
 					"floors": [
 						[
-							"********",
-							"*s..X.g*",
-							"*1..X..*",
-							"********"
+							"",
+							" s..XXg",
+							" 1..XX.",
+							".xxxxXx*",
+							".xxxXXx",
+							"  *"
 						]
 					]
 				},
 				{
 					"id": "intro_crack", "title": "Crumbling",
-					"hint": "Cracked tiles fall away once you step off them. There is no going back.",
+					"hint": "The sky island prisons that the Quaggles have been trapped in are dangerous, and some of them are downright crumbling.",
 					"floors": [
 						[
-							"***********",
-							"*2.s.44.3g*",
-							"***********"
+							"    444443",
+							"    s 2  g",
+							"    444"
 						]
 					]
 				},
 				{
 					"id": "intro_lift", "title": "Going Up",
-					"hint": "Step into the rising rings to ride up one floor.",
+					"hint": "Quaggles don't use stairs, they are too clumsy. Instead they use magical rings. This is good for them.e",
 					"floors": [
-						[
-							"******",
-							"*s..u*",
-							"******"
-						],
 						[
 							"",
-							"     ..g"
-						]
-					]
-				},
-				{
-					"id": "intro_walls", "title": "High Road",
-					"hint": "You can walk along the tops of walls and glass from the floor above.",
-					"floors": [
-						[
-							"*******",
-							"*s.u***",
-							"*****.g"
+							"",
+							"",
+							"",
+							"",
+							"",
+							"",
+							"**",
+							"******",
+							"s...u*"
 						],
 						[
-							""
+							"********",
+							"*      *",
+							"* g**  *",
+							"*   *  *",
+							"*   *  *",
+							"**..** *",
+							"u...*u.*",
+							".."
 						]
 					]
 				}
@@ -149,91 +143,17 @@
 			"id": "easy", "title": "Easy Levels", "label": "Easy",
 			"levels": [
 				{
-					"id": "cold_key", "title": "Cold Key",
+					"id": "ferry", "title": "The Heist",
 					"hint": "",
 					"floors": [
 						[
-							"***********",
-							"*s.xxxxxx.*",
-							"*********.*",
-							"*2xxxxxxx.*",
-							"*********.*",
-							"*g3xxxxxx.*",
-							"***********"
-						]
-					]
-				},
-				{
-					"id": "bumper", "title": "Bumper Cars",
-					"hint": "",
-					"floors": [
-						[
-							"*********",
-							"*s1xxxxx*",
-							"******g**"
-						]
-					]
-				},
-				{
-					"id": "up_and_over", "title": "Up and Over",
-					"hint": "",
-					"floors": [
-						[
-							"*******",
-							"*s.u*2*.3g",
-							"*...*u*",
-							"*******"
-						],
-						[
-							""
-						]
-					]
-				},
-				{
-					"id": "leap_of_faith", "title": "Leap of Faith",
-					"hint": "",
-					"floors": [
-						[
-							"",
-							"   ..",
-							" ....",
-							" u"
+							" *..  u**",
+							" *..**....*",
+							" *.13.."
 						],
 						[
 							"",
-							" s.442",
-							"",
-							"  3g"
-						]
-					]
-				},
-				{
-					"id": "ice_bridge", "title": "Ice Bridge",
-					"hint": "",
-					"floors": [
-						[
-							" .....",
-							" .....",
-							" ..1.."
-						],
-						[
-							"",
-							" s.xx xx.g"
-						]
-					]
-				},
-				{
-					"id": "ferry", "title": "Ferry Service",
-					"hint": "",
-					"floors": [
-						[
-							" ....",
-							" ..........",
-							" ..1."
-						],
-						[
-							"",
-							" s.  2  .3g"
+							" s   2    g"
 						]
 					]
 				},

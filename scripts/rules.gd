@@ -192,14 +192,14 @@ func _can_enter(q: Dictionary, c: int) -> bool:
 
 ## Whether `q` would stay at `p` rather than fall: it is standing in a tile,
 ## on a head, or on top of something solid.
-func _holds(q: Dictionary, p: Vector3i) -> bool:
+func _holds(_q: Dictionary, p: Vector3i) -> bool:
 	if not is_air(cell_at(p)):
 		return true
 	var below := p - UP_ONE
 	if _occupied(below):
 		return true
 	var c := cell_at(below)
-	return c == WALL or c == WINDOW or c == UP or (c == FIELD and not q.key)
+	return c == WALL or c == WINDOW or c == UP or c == FIELD
 
 
 ## Whether there is anything at or under `p` for `q` to land on.
@@ -278,7 +278,13 @@ func _arrive(q: Dictionary, c: int) -> void:
 			_change_cell(q, q.pos, GROUND)
 			events.append({"type": "burn", "id": q.id})
 		KEY:
-			q.key = true
+			# One key at a time: a second one stays where it lies.
+			if not q.key:
+				q.key = true
+				_change_cell(q, q.pos, GROUND)
+		FIELD:
+			# The key switches the field off for good, and is spent doing it.
+			q.key = false
 			_change_cell(q, q.pos, GROUND)
 		ICE:
 			var dir: Vector3i = _momentum.get(q.id, Vector3i.ZERO)

@@ -102,6 +102,24 @@ func _init() -> void:
 	walk(r, 0, "rr")
 	check(r.quaggles[0].pos == Vector3i(2, 0, 0), "walking off a ledge onto a floor below is fine")
 
+	# A key switches off the first force field its carrier walks into, for
+	# everyone, and is spent. A quaggle carries one key at a time.
+	r = Rules.from_floors("field", [["s.3.3", "122.."]])
+	walk(r, 0, "rr")
+	check(r.quaggles[0].pos == Vector3i(1, 0, 0), "a field blocks without a key")
+	walk(r, 1, "r")
+	check(r.quaggles[1].key and r.cell(0, 1, 1) == Rules.GROUND, "picks up a key")
+	walk(r, 1, "r")
+	check(r.cell(0, 2, 1) == Rules.KEY, "a second key stays put while one is carried")
+	walk(r, 1, "u")
+	check(r.quaggles[1].pos == Vector3i(2, 0, 0), "walks into a field with a key")
+	check(not r.quaggles[1].key and r.cell(0, 2, 0) == Rules.GROUND, "the field is gone and the key spent")
+	walk(r, 1, "r")
+	check(not r.try_move(1, 0), "the spent key opens no more fields")
+	r = Rules.from_floors("field floor", [["3."], [" s"]])
+	walk(r, 0, "l")
+	check(r.quaggles[0].pos == Vector3i(0, 0, 1), "a field holds up whoever stands on it")
+
 	# Stacks of any height. A lift raises a whole stack, and from the lift top
 	# the stack can step onto another head: that builds a tower.
 	r = Rules.from_floors("tower", [["s.u", "11."]])

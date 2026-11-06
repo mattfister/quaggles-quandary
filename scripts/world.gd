@@ -12,8 +12,8 @@ const SLIDE_TIME := 0.075
 const FALL_TIME := 0.24
 const RISE_TIME := 0.45
 const SWITCH_DELAY := 0.4  # pause on a lost quaggle before moving to the next
-const DEFAULT_PITCH := 1.2  # a little steeper than the original's (0, +5, +10)
-const DEFAULT_DIST := 12.0
+const DEFAULT_PITCH := 1.0  # about 57 degrees above the horizon
+const DEFAULT_DIST := 14.0
 const BLOCK := preload("res://shaders/block.gdshader")
 const FLOOR_COLORS: Array[Color] = [Color("5fc9b0"), Color("f6d58a"), Color("f3a08c"), Color("b9a6ee")]
 const WALL_TOP := Color("8a90b8")
@@ -56,6 +56,7 @@ var _dot_tex: ImageTexture
 var _particle_mat: StandardMaterial3D
 var _ring_mat: StandardMaterial3D
 var _key_mat: StandardMaterial3D
+var _field_mat: ShaderMaterial
 
 
 func _ready() -> void:
@@ -176,7 +177,7 @@ func build(r: Rules, reset_camera := true) -> void:
 							Rules.FIRE: _add_fire(node, p)
 							Rules.KEY: _add_key(node, p)
 							Rules.UP: _add_lift(node, at)
-							Rules.FIELD: _group(groups, "field", column)
+							Rules.FIELD: _add_field(node, p)
 							Rules.GOAL:
 								_group(groups, "goal", column)
 								_group(groups, "pad", Transform3D(Basis.IDENTITY, at + Vector3(0, 0.02, 0)))
@@ -337,6 +338,14 @@ func _apply_cell(e: Dictionary, gen: int) -> void:
 			for n: Node3D in nodes:
 				n.queue_free()
 			_puff(at + Vector3(0, 0.3, 0), Color(0.25, 0.25, 0.25))
+		Rules.FIELD:
+			for n: Node3D in nodes:
+				var tw := n.create_tween()
+				tw.tween_property(n, "scale", Vector3(1.15, 0.0, 1.15), 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+				tw.tween_callback(n.queue_free)
+			_puff(at + Vector3(0, 0.6, 0), Color(0.85, 0.3, 0.8))
+			if _quags.has(e.id):
+				_take_key(_quags[e.id])
 
 
 func _process(delta: float) -> void:
@@ -500,12 +509,6 @@ func _add_multimesh(parent: Node3D, kind: String, items: Array, f: int) -> void:
 			beam.set_shader_parameter("height", box.size.y)
 			mat = beam
 			shadows = false
-		"field":
-			box.size = Vector3(0.96, H * 0.98, 0.96)
-			var field := ShaderMaterial.new()
-			field.shader = preload("res://shaders/field.gdshader")
-			mat = field
-			shadows = false
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_colors = true
@@ -662,11 +665,37 @@ func _make_key() -> Node3D:
 ## Floats a small key over a quaggle that is carrying one.
 func _give_key(quag: Quaggle) -> void:
 	var key := _make_key()
+	key.name = "Key"
 	key.scale = Vector3.ONE * 0.75
 	key.position = Vector3(0, 1.85, 0)
 	key.set_meta("base_y", key.position.y)
 	quag.add_child(key)
 	_spinners.append(key)
+
+
+## Spends the key a quaggle is carrying.
+func _take_key(quag: Quaggle) -> void:
+	var key := quag.get_node_or_null("Key")
+	if key:
+		_spinners.erase(key)
+		key.queue_free()
+
+
+## A force field is its own mesh, not part of a multimesh, so a key can
+## switch it off.
+func _add_field(parent: Node3D, p: Vector3i) -> void:
+	if _field_mat == null:
+		_field_mat = ShaderMaterial.new()
+		_field_mat.shader = preload("res://shaders/field.gdshader")
+	var field := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.96, H * 0.98, 0.96)
+	field.mesh = box
+	field.material_override = _field_mat
+	field.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	field.position = cell_pos(p) + Vector3(0, H * 0.5, 0)
+	parent.add_child(field)
+	_track(p, field)
 
 
 func _add_lift(parent: Node3D, at: Vector3) -> void:
