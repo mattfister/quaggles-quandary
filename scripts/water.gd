@@ -141,7 +141,68 @@ func _offer(r: Rules, blockers: Dictionary, queue: Array[Vector3i], p: Vector3i,
 	queue.append(p)
 
 
-## Fills the basins falling water lands in (see Task 2). Returns whether any
+## Fills each basin that falling water lands in, from the bottom up, to the
+## last level walled in all round or the level the water fell from, whichever
+## is lower. A basin that fills up to a level that is not walled in overflows:
+## the cells over it go into `spill`, to flow on from. Returns whether any
 ## pool grew.
-func _pools(_r: Rules, _spill: Dictionary) -> bool:
-	return false
+func _pools(r: Rules, spill: Dictionary) -> bool:
+	var grew := false
+	for i in kind.size():
+		var p := pos(i)
+		if kind[i] != FLOW or kind_at(p + UP) != FALL:
+			continue
+		var top := p + UP
+		while kind_at(top + UP) == FALL:
+			top += UP
+		var d := dist[i]
+		var depth := 0
+		var layer: Array[Vector3i] = [p]
+		while layer[0].z <= top.z:
+			var basin := _basin(r, layer)
+			if basin.is_empty():
+				if depth > 0:
+					for q in layer:
+						if not _walls(r.cell_at(q)):
+							spill[q] = d + depth
+				break
+			var next: Array[Vector3i] = []
+			for q in basin:
+				if kind_at(q) != SOURCE:
+					if kind_at(q) != POOL:
+						grew = true
+					_put(q, POOL, STRENGTH, d + depth)
+				if q.z + 1 < floors:
+					next.append(q + UP)
+			depth += 1
+			layer = next
+			if layer.is_empty():
+				break
+	return grew
+
+
+## The cells on one level joined to `starts` that water can get into, if
+## every one of them holds water up (whatever quaggles are there) and none is
+## at the map's edge. Otherwise none: the water would run out.
+func _basin(r: Rules, starts: Array[Vector3i]) -> Array[Vector3i]:
+	var seen := {}
+	var todo: Array[Vector3i] = []
+	for p in starts:
+		if not _walls(r.cell_at(p)):
+			seen[p] = true
+			todo.append(p)
+	var cells: Array[Vector3i] = []
+	while not todo.is_empty():
+		var p: Vector3i = todo.pop_back()
+		if not _rests(r, p, {}):
+			return []
+		cells.append(p)
+		for side in SIDES:
+			var n := p + side
+			if not _inside(n):
+				return []
+			if seen.has(n) or _walls(r.cell_at(n)):
+				continue
+			seen[n] = true
+			todo.append(n)
+	return cells

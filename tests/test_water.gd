@@ -22,6 +22,7 @@ func walk(r: Rules, id: int, steps: String) -> void:
 
 func _init() -> void:
 	flow()
+	pools()
 	print("FAILURES: %d" % failures)
 	quit(1 if failures else 0)
 
@@ -48,3 +49,29 @@ func flow() -> void:
 	w = Water.compute(r)
 	check(w.kind_at(Vector3i(2, 0, 0)) == Water.FALL and w.kind_at(Vector3i(3, 0, 0)) == Water.NONE,
 		"water falls into the void")
+
+
+func pools() -> void:
+	# A pit two deep, walled in up to floor 1; the spring sits on floor 2.
+	var r := Rules.from_floors("pit", [
+		["****", "*..*", "****"],
+		["****", "*  *", "****"],
+		["~   ", "    ", "    "],
+	])
+	var w := Water.compute(r)
+	check(w.kind_at(Vector3i(2, 1, 0)) == Water.POOL and w.kind_at(Vector3i(2, 1, 1)) == Water.POOL,
+		"falling water fills an enclosed pit")
+	check(w.kind_at(Vector3i(2, 1, 2)) == Water.FLOW, "the pool stops at its rim")
+	check(w.level_at(Vector3i(3, 1, 2)) == 3, "and flows on over it")
+
+	# Walls rise above the spring: the pool fills only to the level the
+	# water fell from.
+	r = Rules.from_floors("deep pit", [
+		["****", "*.**", "****"],
+		["****", "* ~*", "****"],
+		["****", "*  *", "****"],
+	])
+	w = Water.compute(r)
+	check(w.kind_at(Vector3i(1, 1, 1)) == Water.POOL, "the pool rises to the level the water fell from")
+	check(w.kind_at(Vector3i(1, 1, 2)) == Water.NONE, "but no higher")
+	check(w.kind_at(Vector3i(2, 1, 1)) == Water.SOURCE, "a spring in a pool stays a spring")
