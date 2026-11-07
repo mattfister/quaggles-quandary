@@ -379,7 +379,7 @@ func _settle_water() -> void:
 		water = Water.compute(self)
 		_water_event(old)
 		var doused := _douse()
-		var rose := false
+		var rose := _float()
 		var fell := _settle()
 		if not (doused or rose or fell):
 			return
@@ -413,3 +413,47 @@ func _douse() -> bool:
 			grid[i] = GROUND
 			any = true
 	return any
+
+
+## Raises each quaggle in deep water, with the stack on its head, to the top
+## of that water. Returns whether anyone rose.
+func _float() -> bool:
+	var rose := false
+	var order := quaggles.filter(func(q: Dictionary) -> bool: return not q.dead and not q.gone)
+	order.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.pos.z < b.pos.z)
+	for q: Dictionary in order:
+		# Someone on a head rises with whoever is under them.
+		if not water.is_deep(q.pos) or _occupied(q.pos - UP_ONE):
+			continue
+		var stack: Array[Dictionary] = [q]
+		var top := _rider(q)
+		while not top.is_empty():
+			stack.append(top)
+			top = _rider(top)
+		var surface: Vector3i = q.pos
+		while water.is_deep(surface + UP_ONE):
+			surface += UP_ONE
+		var lift := 0
+		while lift < surface.z - q.pos.z and _can_rise(stack, lift + 1):
+			lift += 1
+		if lift == 0:
+			continue
+		for member in stack:
+			_set_pos(member, member.pos + UP_ONE * lift)
+			events[-1]["float"] = true
+		rose = true
+	return rose
+
+
+## Whether every quaggle of `stack` has room `n` floors up.
+func _can_rise(stack: Array[Dictionary], n: int) -> bool:
+	var ids := stack.map(func(m: Dictionary) -> int: return m.id)
+	for member in stack:
+		var p: Vector3i = member.pos + UP_ONE * n
+		var c := cell_at(p)
+		if not (is_air(c) or is_walkable(c) or c == ICE or c == GOAL):
+			return false
+		for other in quaggles:
+			if other.pos == p and not other.dead and not other.gone and not ids.has(other.id):
+				return false
+	return true

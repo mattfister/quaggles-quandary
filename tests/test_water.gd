@@ -36,6 +36,8 @@ func _init() -> void:
 	dams()
 	rules_water()
 	swimming()
+	floating()
+	existing_levels()
 	print("FAILURES: %d" % failures)
 	quit(1 if failures else 0)
 
@@ -172,3 +174,35 @@ func swimming() -> void:
 	r = Rules.from_floors("curtain", [["~. s"]])
 	walk(r, 0, "l")
 	check(r.quaggles[0].pos == Vector3i(3, 0, 0), "a waterfall over nothing holds no one up")
+
+
+func floating() -> void:
+	var r := Rules.from_floors("flood", FLOOD)
+	r.quaggles[1].pos = Vector3i(2, 1, 1)
+	r.restore(r.snapshot())
+	walk(r, 2, "u")
+	check(r.quaggles[0].pos == Vector3i(2, 1, 1) and r.quaggles[1].pos == Vector3i(2, 1, 2),
+		"a flooded pit floats the stack up")
+	check(r.events.any(func(e: Dictionary) -> bool: return e.get("float", false)), "floating moves are marked")
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(2, 1, 1), "the swimmer under the rider is stuck")
+	walk(r, 1, "r")
+	check(r.quaggles[1].pos == Vector3i(3, 1, 1), "the rider steps off into the pool and swims")
+
+
+## Every level still loads with no water, and random play neither errors
+## nor hangs.
+func existing_levels() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2007
+	const DIRS := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
+	for level: Dictionary in Levels.all():
+		var r := Rules.load_level(level.id)
+		check(r != null and r.water == null, "%s loads, dry" % level.id)
+		for i in 300:
+			if r.won or r.lost:
+				break
+			if rng.randf() < 0.2:
+				r.cycle_active()
+			var dir: Vector2i = DIRS[rng.randi() % 4]
+			r.try_move(dir.x, dir.y)
