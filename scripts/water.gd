@@ -20,9 +20,40 @@ var dist := PackedInt32Array()
 
 
 static func compute(r: Rules) -> Water:
-	var w := Water.new()
-	w._fill(r, {})
-	return w
+	# Quaggles in deep water swim, and so does anyone on a swimmer's head;
+	# the rest dam the water. Who swims depends on the water, so start with
+	# no dams and add those it shows until no new ones turn up. Dams are only
+	# ever added, so this ends.
+	var spots: Array[Vector3i] = []
+	for q in r.quaggles:
+		if not q.dead and not q.gone:
+			spots.append(q.pos)
+	spots.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return a.z < b.z)
+	var dams := {}
+	while true:
+		var w := Water.new()
+		w._fill(r, dams)
+		var grew := false
+		for p: Vector3i in w._dams(spots):
+			if not dams.has(p):
+				dams[p] = true
+				grew = true
+		if not grew:
+			return w
+	return null
+
+
+## Which of `spots` (quaggles, lowest first) dam this water: all but those
+## in deep water and those standing on them.
+func _dams(spots: Array[Vector3i]) -> Dictionary:
+	var afloat := {}
+	var dams := {}
+	for p in spots:
+		if is_deep(p) or afloat.has(p - UP):
+			afloat[p] = true
+		else:
+			dams[p] = true
+	return dams
 
 
 func kind_at(p: Vector3i) -> int:
