@@ -318,6 +318,10 @@ static func draw_tile(ci: CanvasItem, r: Rect2, c: int, f: int, alpha := 1.0, sh
 			for k in 3:
 				var x0 := inset.position.x + s * (0.25 + 0.25 * k)
 				ci.draw_line(Vector2(x0, inset.position.y + s * 0.12), Vector2(x0, inset.end.y - s * 0.12), a.call(Color(1, 0.8, 1, 0.8)), maxf(1.0, s * 0.04))
+		Rules.SOURCE:
+			ci.draw_rect(inset.grow(-s * 0.1), a.call(Color(0.2, 0.55, 0.95)))
+			ci.draw_circle(mid, s * 0.18, a.call(Color(0.88, 0.97, 1.0)))
+			ci.draw_circle(mid, s * 0.09, a.call(Color(0.2, 0.55, 0.95)))
 		Rules.UP:
 			var cols := [Color(1, 1, 1), Color(1, 0.9, 0.45), Color(0.55, 0.9, 1)]
 			for k in 3:

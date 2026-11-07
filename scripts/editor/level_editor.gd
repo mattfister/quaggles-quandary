@@ -33,6 +33,7 @@ const TILES := [
 	[Rules.KEY, "Key", "2", "Switches off one force field; used up."],
 	[Rules.FIELD, "Force field", "3", "Solid until a key carrier walks in."],
 	[Rules.CRACK, "Cracked", "4", "Crumbles once you step off it."],
+	[Rules.SOURCE, "Spring", "~", "Water flows 3 cells, falls off edges and fills pits it pours into. Quaggles dam it, swim in deep water, and it puts out fire."],
 	[Rules.UP, "Lift", "u", "Raises whoever steps in (and their stack) one floor."],
 	[Rules.GOAL, "Goal", "g", "Get any quaggle here to win."],
 	[Rules.START, "Start", "s", "A quaggle; play begins with the first of these."],
@@ -40,7 +41,7 @@ const TILES := [
 	[Rules.DOWN, "Hole", "d", "Old hole marker: as empty as Empty."],
 ]
 const SHORTCUTS := [
-	["Tiles", "the map character: . * w x X 2 3 4 u g s 1 d, E for empty"],
+	["Tiles", "the map character: . * w x X 2 3 4 ~ u g s 1 d, E for empty"],
 	["Tools", "B paint, L line, R rect, T box, F fill, I pick, M select"],
 	["Mouse", "left uses the tool, right erases, Alt + click picks, wheel zooms, middle drag or Space + drag pans"],
 	["3D view", "left uses the tool, Ctrl + click erases, right drag orbits, Shift + right drag pans"],
