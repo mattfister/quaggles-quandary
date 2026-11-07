@@ -39,10 +39,14 @@ var active := 0
 var won := false
 var lost := false
 var events: Array[Dictionary] = []
+## The water as it stands; null in a level without a spring. Not part of
+## snapshots: it follows from the rest, and restore() works it out again.
+var water: Water
 
 var _no_start_yet := true
 var _momentum := {}  # id -> direction of this move's last step, for ice
 var _gliding := false  # the stack now stepping is sliding on ice
+var _wet := false  # the level has a spring
 
 
 static func load_level(level_id: String) -> Rules:
@@ -85,6 +89,10 @@ static func from_floors(level_name: String, floor_rows: Array) -> Rules:
 						"dead": false, "gone": false, "key": false,
 					})
 					r.set_cell(f, x, y, GROUND)
+	r._wet = r.grid.has(SOURCE)
+	if r._wet:
+		r._settle_water()
+		r.events = []
 	return r
 
 
@@ -129,6 +137,7 @@ func restore(s: Dictionary) -> void:
 	won = s.won
 	lost = s.lost
 	events = []
+	water = Water.compute(self) if _wet else null
 
 
 func cycle_active() -> bool:
@@ -149,6 +158,8 @@ func try_move(dx: int, dy: int) -> bool:
 	if not _step(quaggles[active], Vector3i(dx, dy, 0), WALK):
 		return false
 	_settle()
+	if _wet:
+		_settle_water()
 	for other in quaggles:
 		if other.dead:
 			other.gone = true
@@ -294,7 +305,9 @@ func _arrive(q: Dictionary, c: int) -> void:
 
 
 ## Gravity: drops every quaggle without footing, lowest first, until all rest.
-func _settle() -> void:
+## Returns whether anyone fell.
+func _settle() -> bool:
+	var fell := false
 	var order := quaggles.duplicate()
 	var moving := true
 	while moving:
@@ -305,6 +318,7 @@ func _settle() -> void:
 			if q.dead or q.gone or _holds(q, q.pos):
 				continue
 			moving = true
+			fell = true
 			_fall(q)
 			if not q.dead and cell_at(q.pos) == ICE:
 				on_ice.append(q)
@@ -312,6 +326,7 @@ func _settle() -> void:
 		for q in on_ice:
 			if not q.dead and cell_at(q.pos) == ICE:
 				_arrive(q, ICE)
+	return fell
 
 
 func _fall(q: Dictionary) -> void:
@@ -329,3 +344,48 @@ func _fall(q: Dictionary) -> void:
 			return
 		if _holds(q, below):
 			return
+
+
+## After a move: work the water out, put out the fires it reaches, float
+## whoever is in deep water and drop whoever is left without footing, until
+## nothing changes.
+func _settle_water() -> void:
+	for i in floors * 2 + quaggles.size() + 1:
+		var old := water
+		water = Water.compute(self)
+		_water_event(old)
+		var doused := _douse()
+		var rose := false
+		var fell := _settle()
+		if not (doused or rose or fell):
+			return
+	push_error("The water in '%s' did not settle" % name)
+
+
+## A "water" event listing the cells that changed since `old`. Each one's
+## `delay` is its distance from its spring, for the view's ripple.
+func _water_event(old: Water) -> void:
+	var added: Array[Dictionary] = []
+	var removed: Array[Dictionary] = []
+	for i in water.kind.size():
+		var was: int = old.kind[i] if old else Water.NONE
+		var now: int = water.kind[i]
+		if now == was and (now == Water.NONE or water.level[i] == old.level[i]):
+			continue
+		if now == Water.NONE:
+			removed.append({"pos": water.pos(i), "delay": old.dist[i]})
+		else:
+			added.append({"pos": water.pos(i), "kind": now, "level": water.level[i], "delay": water.dist[i]})
+	if not added.is_empty() or not removed.is_empty():
+		events.append({"type": "water", "id": -1, "added": added, "removed": removed})
+
+
+## Puts out every fire the water reaches. Returns whether there were any.
+func _douse() -> bool:
+	var any := false
+	for i in grid.size():
+		if grid[i] == FIRE and water.kind[i] != Water.NONE:
+			events.append({"type": "cell", "id": -1, "pos": water.pos(i), "was": FIRE, "now": GROUND})
+			grid[i] = GROUND
+			any = true
+	return any

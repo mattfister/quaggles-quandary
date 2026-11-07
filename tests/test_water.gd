@@ -34,6 +34,7 @@ func _init() -> void:
 	flow()
 	pools()
 	dams()
+	rules_water()
 	print("FAILURES: %d" % failures)
 	quit(1 if failures else 0)
 
@@ -107,3 +108,27 @@ func dams() -> void:
 	w = Water.compute(r)
 	check(w.kind_at(Vector3i(3, 1, 1)) == Water.POOL and w.kind_at(Vector3i(4, 1, 2)) == Water.FLOW,
 		"a stack afloat does not dam the water that floats it")
+
+
+func rules_water() -> void:
+	check(Rules.from_floors("dry", [["s."]]).water == null, "no water work without a spring")
+
+	var r := Rules.from_floors("dam", [["~.1..", "  ."]])
+	check(r.water.kind_at(Vector3i(3, 0, 0)) == Water.NONE, "loads with the water dammed")
+	var snap := r.snapshot()
+	walk(r, 0, "d")
+	check(r.water.kind_at(Vector3i(3, 0, 0)) == Water.FLOW, "moving the dam lets the water through")
+	check(r.events.any(func(e: Dictionary) -> bool: return e.type == "water"), "the move has a water event")
+	r.restore(snap)
+	check(r.water.kind_at(Vector3i(3, 0, 0)) == Water.NONE, "undo puts the water back")
+
+	r = Rules.from_floors("douse", [["~.1X", "  . "]])
+	check(r.cell(0, 3, 0) == Rules.FIRE, "the dam keeps the fire dry")
+	walk(r, 0, "d")
+	check(r.cell(0, 3, 0) == Rules.GROUND, "water puts the fire out")
+	check(r.events.any(func(e: Dictionary) -> bool: return e.type == "cell" and e.id == -1 and e.was == Rules.FIRE),
+		"with a cell event that belongs to no quaggle")
+
+	r = Rules.from_floors("field", [["~3.", "12 "]])
+	walk(r, 0, "rud")
+	check(r.water.kind_at(Vector3i(2, 0, 0)) == Water.FLOW, "a keyed force field lets the water through")
