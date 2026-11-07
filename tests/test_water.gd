@@ -35,6 +35,7 @@ func _init() -> void:
 	pools()
 	dams()
 	rules_water()
+	swimming()
 	print("FAILURES: %d" % failures)
 	quit(1 if failures else 0)
 
@@ -132,3 +133,42 @@ func rules_water() -> void:
 	r = Rules.from_floors("field", [["~3.", "12 "]])
 	walk(r, 0, "rud")
 	check(r.water.kind_at(Vector3i(2, 0, 0)) == Water.FLOW, "a keyed force field lets the water through")
+
+
+func swimming() -> void:
+	var r := Rules.from_floors("slide in", [["sx~"]])
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(2, 0, 0) and not r.quaggles[0].gone, "a slide stops in deep water")
+
+	r = Rules.from_floors("no stacks", [["s1~"]])
+	r.quaggles[1].pos = Vector3i(0, 0, 1)
+	r.restore(r.snapshot())
+	walk(r, 0, "rr")
+	check(r.quaggles[0].pos == Vector3i(1, 0, 0), "a stack cannot step into deep water")
+
+	r = Rules.from_floors("no drops", [["*~ "], ["s 1"]])
+	r.quaggles[1].pos = Vector3i(0, 0, 2)
+	r.restore(r.snapshot())
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(0, 0, 1), "a stack cannot drop into deep water")
+	walk(r, 1, "r")
+	check(r.quaggles[1].pos == Vector3i(1, 0, 0), "a lone quaggle drops in and swims")
+
+	# Quaggle 0 swims in the spring at (1, 0); quaggle 1 starts on the wall.
+	r = Rules.from_floors("pinned", [["*~~~1"], ["s"]])
+	r.quaggles[0].pos = Vector3i(1, 0, 0)
+	r.restore(r.snapshot())
+	walk(r, 1, "r")
+	check(r.quaggles[1].pos == Vector3i(1, 0, 1), "a swimmer's head is a stepping stone")
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(1, 0, 0), "a swimmer with someone on its head is stuck")
+	walk(r, 1, "rr")
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(2, 0, 0), "and free once they go")
+
+	r = Rules.from_floors("base", [["...s"], ["~.  "]])
+	walk(r, 0, "l")
+	check(r.quaggles[0].pos == Vector3i(3, 0, 0), "a waterfall's base cannot be walked into")
+	r = Rules.from_floors("curtain", [["~. s"]])
+	walk(r, 0, "l")
+	check(r.quaggles[0].pos == Vector3i(3, 0, 0), "a waterfall over nothing holds no one up")

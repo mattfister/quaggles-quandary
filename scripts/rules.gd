@@ -112,7 +112,7 @@ func set_cell(f: int, x: int, y: int, c: int) -> void:
 
 
 static func is_walkable(c: int) -> bool:
-	return c == START or c == GROUND or c == FIRE or c == KEY or c == CRACK
+	return c == START or c == GROUND or c == FIRE or c == KEY or c == CRACK or c == SOURCE
 
 
 static func is_air(c: int) -> bool:
@@ -205,6 +205,8 @@ func _can_enter(q: Dictionary, c: int) -> bool:
 ## Whether `q` would stay at `p` rather than fall: it is standing in a tile,
 ## on a head, or on top of something solid.
 func _holds(_q: Dictionary, p: Vector3i) -> bool:
+	if water and water.is_deep(p):
+		return true
 	if not is_air(cell_at(p)):
 		return true
 	var below := p - UP_ONE
@@ -254,6 +256,10 @@ func _change_cell(q: Dictionary, p: Vector3i, c: int) -> void:
 ## nothing; a SLIDE or a CARRIED rider goes wherever it is taken.
 func _step(q: Dictionary, delta: Vector3i, mode: int) -> bool:
 	var old: Vector3i = q.pos
+	var rider := _rider(q)
+	# A swimmer with someone on its head cannot move.
+	if water and mode == WALK and not rider.is_empty() and water.is_deep(old):
+		return false
 	var new := old + delta
 	var c := cell_at(new)
 	if c == UP:
@@ -265,7 +271,8 @@ func _step(q: Dictionary, delta: Vector3i, mode: int) -> bool:
 		return false
 	if mode == WALK and not _has_landing(q, new):
 		return false
-	var rider := _rider(q)
+	if water and _wet_refuses(new, not rider.is_empty(), mode):
+		return false
 	if mode != CARRIED:
 		_gliding = c == ICE
 	_set_pos(q, new, _gliding)
@@ -277,6 +284,23 @@ func _step(q: Dictionary, delta: Vector3i, mode: int) -> bool:
 		_momentum.erase(rider.id)
 	_arrive(q, c)
 	return true
+
+
+## Whether water keeps a quaggle out of `p`: a waterfall's base keeps
+## everyone out; deep water (or, walking, landing in it) keeps out anyone
+## `carrying` a stack.
+func _wet_refuses(p: Vector3i, carrying: bool, mode: int) -> bool:
+	if water.is_base(p):
+		return true
+	if not carrying:
+		return false
+	if water.is_deep(p):
+		return true
+	if mode == WALK:
+		while p.z >= 0 and not _holds({}, p):
+			p -= UP_ONE
+		return p.z >= 0 and water.is_deep(p)
+	return false
 
 
 ## What the cell `q` has just entered does to it.
