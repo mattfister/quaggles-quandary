@@ -62,6 +62,9 @@ var _hud: Control
 var _status: Label
 var _hint: PanelContainer
 var _hint_label: Label
+var _hint_open_button: Button
+var _hint_closed := false
+var _hint_level := ""  # level the hint was last shown for; closing sticks through restarts
 var _result: Control
 var _result_title: Label
 var _next_button: Button
@@ -169,9 +172,11 @@ func _begin(loaded: Rules, entry: Dictionary) -> void:
 	_result.hide()
 	_back_button.text = "Editor" if testing else "Levels"
 	_result_back.text = _back_button.text
-	var hint: String = entry.get("hint", "")
-	_hint_label.text = hint
-	_hint.visible = hint != ""
+	_hint_label.text = entry.get("hint", "")
+	if entry.id != _hint_level:
+		_hint_level = entry.id
+		_hint_closed = false
+	_show_hint()
 	_update_status()
 
 
@@ -183,6 +188,7 @@ func undo() -> void:
 	_result_pending = false
 	_result.hide()
 	world.build(rules, false)
+	_show_hint()
 	_update_status()
 
 
@@ -348,8 +354,21 @@ func _unhandled_input(event: InputEvent) -> void:
 			world.set_floor_limit(world.floor_limit - 1)
 
 
+## Shows the level's hint, or the ? button that brings it back once closed.
+func _show_hint() -> void:
+	var has_hint := _hint_label.text != ""
+	_hint.visible = has_hint and not _hint_closed
+	_hint_open_button.visible = has_hint and _hint_closed
+
+
+func _set_hint_closed(closed: bool) -> void:
+	_hint_closed = closed
+	_show_hint()
+
+
 func _show_result() -> void:
 	_hint.hide()
+	_hint_open_button.hide()
 	if rules.won and testing:
 		_result_title.text = "Playtest won in %d moves" % undo_stack.size()
 		_next_button.hide()
@@ -527,11 +546,22 @@ func _build_ui() -> void:
 	_hint.theme_type_variation = "HintPanel"
 	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hint_anchor.add_child(_hint)
+	var hint_row := HBoxContainer.new()
+	hint_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hint.add_child(hint_row)
 	_hint_label = _text("", 20)
 	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_hint_label.custom_minimum_size = Vector2(720, 0)
-	_hint.add_child(_hint_label)
+	hint_row.add_child(_hint_label)
+	var hint_close := _small_button("×", _set_hint_closed.bind(true))
+	hint_close.tooltip_text = "Hide hint"
+	hint_close.add_theme_font_size_override("font_size", 30)
+	hint_close.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	hint_row.add_child(hint_close)
+	_hint_open_button = _small_button("?", _set_hint_closed.bind(false))
+	_hint_open_button.tooltip_text = "Show hint"
+	hint_anchor.add_child(_hint_open_button)
 
 	# Win / lose panel, shown over the HUD.
 	_result = _centered_panel(_hud)
@@ -734,6 +764,22 @@ func _button(text: String, action: Callable) -> Button:
 	b.pressed.connect(func() -> void:
 		Sfx.play("click")
 		action.call())
+	return b
+
+
+## Square button for the hint's close and reopen.
+func _small_button(text: String, action: Callable) -> Button:
+	var b := _button(text, action)
+	b.custom_minimum_size = Vector2(40, 40)
+	var styles := {"normal": _button_box(AMBER, 4), "hover": _button_box(AMBER.lightened(0.25), 4),
+		"pressed": _button_box(AMBER.darkened(0.12), 1)}
+	for state: String in styles:
+		var box: StyleBoxFlat = styles[state]
+		box.content_margin_left = 6
+		box.content_margin_right = 6
+		box.content_margin_top -= 4
+		box.content_margin_bottom -= 4
+		b.add_theme_stylebox_override(state, box)
 	return b
 
 

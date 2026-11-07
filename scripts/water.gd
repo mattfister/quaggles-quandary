@@ -10,6 +10,11 @@ const STRENGTH := 4  # a spring's; flowing water loses one per cell
 const UP := Vector3i(0, 0, 1)
 const SIDES: Array[Vector3i] = [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 1, 0), Vector3i(0, -1, 0)]
 
+## Water already worked out, by grid and quaggle positions: the solver comes
+## back to the same states over and over. A Water is never changed once made.
+static var _cache := {}
+const CACHE_SIZE := 50000
+
 var width := 0
 var height := 0
 var floors := 0
@@ -28,7 +33,11 @@ static func compute(r: Rules) -> Water:
 	for q in r.quaggles:
 		if not q.dead and not q.gone:
 			spots.append(q.pos)
-	spots.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return a.z < b.z)
+	spots.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return a.z < b.z or (a.z == b.z and (a.y < b.y or (a.y == b.y and a.x < b.x))))
+	var key := [r.grid, spots]
+	var known: Water = _cache.get(key)
+	if known:
+		return known
 	var dams := {}
 	while true:
 		var w := Water.new()
@@ -39,6 +48,9 @@ static func compute(r: Rules) -> Water:
 				dams[p] = true
 				grew = true
 		if not grew:
+			if _cache.size() >= CACHE_SIZE:
+				_cache.clear()
+			_cache[key] = w
 			return w
 	return null
 
@@ -64,6 +76,12 @@ func level_at(p: Vector3i) -> int:
 	return level[_i(p)] if _inside(p) else 0
 
 
+## Whether `p` is on the map. Water that would flow off it is lost; only the
+## view shows it falling.
+func contains(p: Vector3i) -> bool:
+	return _inside(p)
+
+
 ## Pools: deep enough to swim in. A spring is not: it is a tile, and a
 ## quaggle standing on it stops it up (unless a pool covers it).
 func is_deep(p: Vector3i) -> bool:
@@ -73,6 +91,21 @@ func is_deep(p: Vector3i) -> bool:
 ## The cell a waterfall lands in, which cannot be walked into.
 func is_base(p: Vector3i) -> bool:
 	return kind_at(p) != NONE and kind_at(p + UP) == FALL
+
+
+## The cells whose water pours into the waterfall landing in `base`: those
+## beside the top of its column with water strong enough to flow on.
+func feeds(base: Vector3i) -> Array[Vector3i]:
+	var top := base + UP
+	while kind_at(top + UP) == FALL:
+		top += UP
+	var from: Array[Vector3i] = []
+	for side in SIDES:
+		var n := top + side
+		var k := kind_at(n)
+		if k == SOURCE or k == POOL or (k == FLOW and level_at(n) > 1):
+			from.append(n)
+	return from
 
 
 @warning_ignore("integer_division")
@@ -145,16 +178,23 @@ func _fill(r: Rules, blockers: Dictionary) -> void:
 ## Spreads water from `queue`: sideways, a step weaker per cell, where it
 ## rests; straight down at full strength where it does not.
 func _flow(r: Rules, blockers: Dictionary, queue: Array[Vector3i]) -> void:
-	while not queue.is_empty():
-		var p: Vector3i = queue.pop_front()
+	var next := 0
+	while next < queue.size():
+		var p: Vector3i = queue[next]
+		next += 1
 		var i := _i(p)
 		if not _rests(r, p, blockers):
 			kind[i] = FALL
 			level[i] = STRENGTH
 			_offer(r, blockers, queue, p - UP, STRENGTH, dist[i] + 1)
 			continue
+		# A curb's rim keeps flowing water from crossing it either way; water
+		# falling onto one stays there.
+		if r.cell_at(p) == Rules.CURB:
+			continue
 		for side in SIDES:
-			_offer(r, blockers, queue, p + side, level[i] - 1, dist[i] + 1)
+			if r.cell_at(p + side) != Rules.CURB:
+				_offer(r, blockers, queue, p + side, level[i] - 1, dist[i] + 1)
 
 
 ## Water of strength `l` reaching `p`, unless it is kept out or `p` already

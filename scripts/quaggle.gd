@@ -4,6 +4,8 @@ extends Node3D
 ## animation. Faces local -Z.
 
 const TOON := preload("res://shaders/toon.gdshader")
+const RIPPLE := preload("res://shaders/ripple.gdshader")
+const SINK := 0.34  # how far a swimmer sits down into the water
 const BODY_R := 0.5
 const HEAD_R := 0.25
 const LIMB_R := 0.2
@@ -27,6 +29,15 @@ var _walk := 0.0
 var _target_yaw := 0.0
 var _phase := Vector3.ZERO
 var _cheer := false
+## In deep water, how high the surface is over the quaggle's cell floor (else
+## below 0): it sits in the water there, bobs, paddles and sends rings across.
+var swim_surface := -1.0
+## Someone stands on its head: it stays put instead of rising to the surface.
+var carrying := false
+var _swim := 0.0
+var _ripple: MeshInstance3D
+var _float_y := 0.0
+var _ripple_mat := ShaderMaterial.new()
 
 
 func setup(quaggle_id: int, color_index: int, rng: RandomNumberGenerator) -> void:
@@ -53,6 +64,14 @@ func setup(quaggle_id: int, color_index: int, rng: RandomNumberGenerator) -> voi
 		_part(_head, Vector3(side * 0.115, 0.055, -0.255), 0.035, Color(0.05, 0.05, 0.08))
 		_arms.append(_part(_model, Vector3(side * 0.36, BODY_R * 1.5, 0), LIMB_R, tertiary))
 		_legs.append(_part(_model, Vector3(side * 0.27, LIMB_R, 0), LIMB_R, tertiary))
+	_ripple = MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(1.7, 1.7)
+	_ripple.mesh = plane
+	_ripple_mat.shader = RIPPLE
+	_ripple.material_override = _ripple_mat
+	_ripple.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_ripple)
 
 
 func _part(parent: Node3D, at: Vector3, radius: float, color: Color) -> MeshInstance3D:
@@ -85,13 +104,26 @@ func _process(delta: float) -> void:
 		_head.rotation.y = lerp_angle(_head.rotation.y, 0.0, minf(1.0, delta * 10.0))
 	else:
 		_head.rotation.y = deg_to_rad(18.0 * sin(_t * 0.7 + _phase.x) + 10.0 * sin(_t * 1.9 + _phase.y))
+	var swimming := swim_surface >= 0.0
+	_swim = move_toward(_swim, 1.0 if swimming else 0.0, delta * 3.0)
+	_ripple_mat.set_shader_parameter("strength", _swim)
+	if swimming:
+		_ripple.position.y = swim_surface + 0.01
+		# Afloat, the body sits SINK below a pool's own surface (0.16 up).
+		_float_y = lerpf(_float_y, 0.0 if carrying else swim_surface - 0.16 - SINK, minf(1.0, delta * 6.0))
 	for i in 2:
 		var side := -1.0 if i == 0 else 1.0
 		var bob := 0.04 * sin(_t * 1.6 + _phase.z + i)
-		_arms[i].position = Vector3(side * (0.36 + 0.03 * sin(_t * 1.1 + _phase.y)), BODY_R * 1.5 + bob, side * swing)
+		# Swimmers paddle: arms out at the water line, sweeping in turn.
+		var paddle := sin(_t * 5.0 + i * PI) * 0.18 * _swim
+		_arms[i].position = Vector3(side * (0.36 + 0.03 * sin(_t * 1.1 + _phase.y) + 0.08 * _swim),
+			BODY_R * 1.5 + bob - 0.2 * _swim, side * swing + paddle)
 		_legs[i].position = Vector3(side * 0.27, LIMB_R, -side * swing)
+	var bob := 0.0 if carrying else 0.05 * sin(_t * 2.4 + _phase.x)
+	_model.position.y = (_float_y + bob) * _swim
+	_model.rotation.z = 0.06 * sin(_t * 1.7 + _phase.y) * _swim
 	if _cheer:
-		_model.position.y = absf(sin(_t * 7.0)) * 0.35
+		_model.position.y += absf(sin(_t * 7.0)) * 0.35
 		_arms[0].position.y += 0.3
 		_arms[1].position.y += 0.3
 

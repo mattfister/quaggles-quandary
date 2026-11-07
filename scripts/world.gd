@@ -7,6 +7,8 @@ extends Node3D
 const H := 1.4  # height between floors (lheight)
 const TILE_T := 0.3
 const LOW := H - TILE_T  # a wall under a floor tile stops at the tile's underside
+const CURB_H := 0.12  # a curb's rim: how high it stands, and how wide
+const CURB_W := 0.1
 const HOP_TIME := 0.15
 const SLIDE_TIME := 0.075
 const FALL_TIME := 0.24
@@ -66,6 +68,8 @@ var _dot_tex: ImageTexture
 var _particle_mat: StandardMaterial3D
 var _ring_mat: StandardMaterial3D
 var _key_mat: StandardMaterial3D
+var _curb_mesh: Mesh
+var _curb_mat: StandardMaterial3D
 var _field_mat: ShaderMaterial
 
 
@@ -152,6 +156,11 @@ static func cell_pos(p: Vector3i) -> Vector3:
 	return Vector3(-(p.x + 0.5), p.z * H, p.y + 0.5)
 
 
+## The cell a point in the world is in (the one cell_pos() gives the floor of).
+static func grid_pos(at: Vector3) -> Vector3i:
+	return Vector3i(roundi(-at.x - 0.5), roundi(at.z - 0.5), roundi(at.y / H))
+
+
 ## Rebuilds everything from `r`. Camera angle is kept unless `reset_camera`.
 func build(r: Rules, reset_camera := true) -> void:
 	rules = r
@@ -197,10 +206,14 @@ func build(r: Rules, reset_camera := true) -> void:
 					Rules.ICE: _group(groups, "ice", slab, shade * 0.5 + 0.5, joined)
 					Rules.DOWN: _group(groups, "hole", slab)
 					Rules.CRACK: _add_crack(node, p)
+					Rules.CURB:
+						_group(groups, "tile", slab, shade, joined)
+						_add_curb(node, at)
 					_:
 						_group(groups, "tile", slab, shade, joined)
 						match c:
-							Rules.GROUND, Rules.START, Rules.SPAWN, Rules.SOURCE: pass
+							Rules.GROUND, Rules.START, Rules.SPAWN: pass
+							Rules.SOURCE: _add_spring(node, at)
 							Rules.FIRE: _add_fire(node, p)
 							Rules.KEY: _add_key(node, p)
 							Rules.UP: _add_lift(node, at)
@@ -218,6 +231,7 @@ func build(r: Rules, reset_camera := true) -> void:
 	_water = WaterView.new()
 	_root.add_child(_water)
 	_water.build(r.water, _floors)
+	_water.set_dams(_spots(), r.water)
 
 	for q in r.quaggles:
 		if q.gone:
@@ -304,6 +318,8 @@ func play(events: Array[Dictionary]) -> float:
 			for t: float in clock.values():
 				start = maxf(start, t)
 			if e.type == "water":
+				var sound := "pour" if not e.added.is_empty() else "drain"
+				get_tree().create_timer(start).timeout.connect(Sfx.play.bind(sound, 0.1))
 				water_end = start + _water.play(e, start, rules.water)
 			else:
 				var cell_tw := create_tween()
@@ -344,13 +360,16 @@ func play(events: Array[Dictionary]) -> float:
 						slid[id] = true
 						if e.cell == Rules.ICE:
 							tw.tween_callback(Sfx.play.bind("slide", 0.1))
+				elif rules.water and rules.water.is_deep(to):
+					tw.tween_callback(Sfx.play.bind("paddle", 0.2))
 				else:
 					tw.tween_callback(Sfx.play.bind("step", 0.2))
 				if e.cell == Rules.FIELD:
 					tw.tween_callback(Sfx.play.bind("field"))
 				quag.queue_step(tw, cell_pos(from), cell_pos(to), kind, time)
 				if kind == "fall":
-					tw.tween_callback(Sfx.play.bind("land", 0.1))
+					var deep := rules.water != null and rules.water.is_deep(to)
+					tw.tween_callback(Sfx.play.bind("splash" if deep else "land", 0.1))
 				clock[id] += time
 			"cell":
 				tw.tween_callback(_apply_cell.bind(e, _gen))
@@ -379,6 +398,12 @@ func play(events: Array[Dictionary]) -> float:
 	var total := water_end
 	for id: int in clock:
 		total = maxf(total, clock[id])
+	if rules.water:
+		# Once everyone has moved and the water has settled.
+		var gen := _gen
+		get_tree().create_timer(total).timeout.connect(func() -> void:
+			if gen == _gen:
+				_water.set_dams(_spots(), rules.water))
 	if leaving.has(_shown):
 		total += SWITCH_DELAY
 		_hold = total
@@ -411,6 +436,8 @@ func _apply_cell(e: Dictionary, gen: int) -> void:
 			if _quags.has(e.id):
 				_give_key(_quags[e.id])
 		Rules.FIRE:
+			if e.id < 0:
+				Sfx.play("hiss", 0.1)  # put out by water
 			for n: Node3D in nodes:
 				n.queue_free()
 			_puff(at + Vector3(0, 0.3, 0), Color(0.25, 0.25, 0.25))
@@ -445,6 +472,7 @@ func _process(delta: float) -> void:
 	for child in _root.get_children():
 		if child is Quaggle:
 			_place_blob(child)
+			_float_quaggle(child)
 
 	var quag: Quaggle = _quags.get(_shown)
 	_marker.visible = quag != null and not demo and not edit_mode and not rules.won
@@ -799,6 +827,85 @@ func _add_fire(parent: Node3D, p: Vector3i) -> void:
 	flames.color_ramp = _ramp([Color(1, 0.95, 0.4, 0.9), Color(1, 0.45, 0.05, 0.8), Color(0.8, 0.05, 0.0, 0.0)])
 	flames.preprocess = 1.0
 	fire.add_child(flames)
+
+
+## Where the quaggles still in play stand.
+func _spots() -> Array[Vector3i]:
+	var spots: Array[Vector3i] = []
+	for q in rules.quaggles:
+		if not q.gone:
+			spots.append(q.pos)
+	return spots
+
+
+## Tells a quaggle in deep water where the surface is, so it swims at it.
+## One holding someone up stays down, under their feet. One held under a
+## floor, with no air above the water, just stands in it.
+func _float_quaggle(quag: Quaggle) -> void:
+	var p := grid_pos(quag.position)
+	if rules.water == null or not rules.water.is_deep(p) or _held_under(p):
+		quag.swim_surface = -1.0
+		return
+	var surface := WaterView.depth(p, rules.water)
+	if rules.water.kind_at(p + Vector3i(0, 0, 1)) != Water.NONE:
+		surface = H + WaterView.depth(p + Vector3i(0, 0, 1), rules.water)
+	quag.swim_surface = surface
+	quag.carrying = false
+	for q in rules.quaggles:
+		if q.pos == p + Vector3i(0, 0, 1) and not q.gone and Rules.is_air(rules.cell_at(q.pos)):
+			quag.carrying = true
+
+
+## Whether the deep water over `p` runs up to a floor, leaving no surface.
+func _held_under(p: Vector3i) -> bool:
+	var top := p
+	while rules.water.is_deep(top + Vector3i(0, 0, 1)):
+		top += Vector3i(0, 0, 1)
+	return not Rules.is_air(rules.cell_at(top + Vector3i(0, 0, 1)))
+
+
+## A curb's low stone rim round the edge of its tile.
+func _add_curb(parent: Node3D, at: Vector3) -> void:
+	if _curb_mesh == null:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for side in 4:
+			var rim := BoxMesh.new()
+			rim.size = Vector3(1.0, CURB_H, CURB_W) if side < 2 else Vector3(CURB_W, CURB_H, 1.0 - 2.0 * CURB_W)
+			var off := (0.5 - CURB_W * 0.5) * (1.0 if side % 2 == 0 else -1.0)
+			var shift := Vector3(0, CURB_H * 0.5, off) if side < 2 else Vector3(off, CURB_H * 0.5, 0)
+			st.append_from(rim, 0, Transform3D(Basis.IDENTITY, shift))
+		_curb_mesh = st.commit()
+		_curb_mat = _flat(WALL_TOP.lightened(0.15), 0.0)
+	var rim := MeshInstance3D.new()
+	rim.mesh = _curb_mesh
+	rim.material_override = _curb_mat
+	rim.position = at
+	parent.add_child(rim)
+
+
+## A spring's stone basin, there whether it flows or is stopped up.
+func _add_spring(parent: Node3D, at: Vector3) -> void:
+	var stone := _flat(WALL_TOP.lightened(0.15), 0.0)
+	var rim := MeshInstance3D.new()
+	var ring := TorusMesh.new()
+	ring.inner_radius = 0.3
+	ring.outer_radius = 0.44
+	ring.rings = 24
+	rim.mesh = ring
+	rim.material_override = stone
+	rim.scale = Vector3(1, 1.6, 1)
+	rim.position = at + Vector3(0, 0.07, 0)
+	parent.add_child(rim)
+	var spout := MeshInstance3D.new()
+	var nub := CylinderMesh.new()
+	nub.top_radius = 0.06
+	nub.bottom_radius = 0.1
+	nub.height = 0.14
+	spout.mesh = nub
+	spout.material_override = stone
+	spout.position = at + Vector3(0, 0.07, 0)
+	parent.add_child(spout)
 
 
 func _add_key(parent: Node3D, p: Vector3i) -> void:

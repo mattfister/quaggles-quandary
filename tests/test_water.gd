@@ -71,6 +71,25 @@ func flow() -> void:
 	check(w.kind_at(Vector3i(2, 0, 0)) == Water.FALL and w.kind_at(Vector3i(3, 0, 0)) == Water.NONE,
 		"water falls into the void")
 
+	r = Rules.from_floors("curb", [["~.^.."]])
+	w = Water.compute(r)
+	check(w.kind_at(Vector3i(1, 0, 0)) == Water.FLOW and w.kind_at(Vector3i(2, 0, 0)) == Water.NONE
+		and w.kind_at(Vector3i(3, 0, 0)) == Water.NONE, "a curb keeps flowing water out")
+
+	r = Rules.from_floors("puddle", [[".^."], ["~  "]])
+	w = Water.compute(r)
+	check(w.kind_at(Vector3i(1, 0, 0)) == Water.FLOW and w.kind_at(Vector3i(2, 0, 0)) == Water.NONE,
+		"water falling onto a curb stays there")
+
+	# A pit (x 1-3) with a curb in the middle, which a spring on floor 2
+	# pours into at x 3.
+	r = Rules.from_floors("sunk curb", [
+		["*****", "*.^.*", "*****"],
+		["*****", "*   *", "*****"],
+		["   ~ ", "     ", "     "]])
+	w = Water.compute(r)
+	check(w.is_deep(Vector3i(1, 1, 0)) and w.is_deep(Vector3i(2, 1, 0)), "a pool rises over a curb")
+
 
 func pools() -> void:
 	# A pit two deep, walled in up to floor 1; the spring sits on floor 2.
@@ -184,6 +203,40 @@ func swimming() -> void:
 	r = Rules.from_floors("base", [["...s"], ["~.  "]])
 	walk(r, 0, "l")
 	check(r.quaggles[0].pos == Vector3i(3, 0, 0), "a waterfall's base cannot be walked into")
+	# A spring on floor 1 pours onto quaggle 0's head; the water spreads and
+	# spills down all round it.
+	r = Rules.from_floors("drenched", [[".....", "..s..", "....."], ["     ", "~.   ", "     "]])
+	check(r.water.is_base(Vector3i(3, 1, 0)), "water spilling off a head makes waterfalls round it")
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(3, 1, 0), "a quaggle under a waterfall can walk out through it")
+	walk(r, 0, "l")
+	check(r.quaggles[0].pos == Vector3i(3, 1, 0), "but cannot walk back into it")
+	# Springs at (3, 0, 1) and (4, 0, 1): the first pours onto quaggle 0's
+	# head, and the fall to its right is fed by both.
+	r = Rules.from_floors("shared fall", [["   **  ", "...s..."], ["   ~~  ", "       "]])
+	check(r.water.is_base(Vector3i(4, 1, 0)) and r.water.is_base(Vector3i(2, 1, 0)), "falls both sides")
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(3, 1, 0), "no stepping out into a fall other water feeds too")
+	walk(r, 0, "l")
+	check(r.quaggles[0].pos == Vector3i(2, 1, 0), "but into one fed only off its head")
+	# A pit (x 1-3) two floors deep with a floor-2 tile over its left end:
+	# quaggle 0 starts under it.
+	r = Rules.from_floors("ceiling", [
+		["*****", "*s1.*", "*****"],
+		["*****", "*   *", "*****"],
+		["   ~ ", " .   ", "     "]])
+	check(r.quaggles[0].pos == Vector3i(1, 1, 0) and r.quaggles[1].pos == Vector3i(2, 1, 1),
+		"rising water lifts no one up against a floor")
+	walk(r, 1, "l")
+	check(r.quaggles[1].pos == Vector3i(2, 1, 1), "no swimming in under a floor")
+	walk(r, 1, "r")
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(2, 1, 1), "the one held under swims out and comes up")
+	r = Rules.from_floors("curb walk", [["sx^."]])
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(2, 0, 0), "a slide stops on a curb, as on floor")
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(3, 0, 0), "and quaggles step off it")
 	r = Rules.from_floors("curtain", [["~. s"]])
 	walk(r, 0, "l")
 	check(r.quaggles[0].pos == Vector3i(3, 0, 0), "a waterfall over nothing holds no one up")

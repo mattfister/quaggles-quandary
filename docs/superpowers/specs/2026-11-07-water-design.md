@@ -55,6 +55,14 @@ can release a flood.
 - **Floating**: a quaggle in deep water rises to the top of the deep water in
   its column, and its stack rides on its head. The riders above the surface
   move normally.
+- **Curbs** (`^`): floor with a low rim. Quaggles walk on them like floor
+  (a slide stops on one, as on floor). Flowing water cannot cross a curb's
+  edge either way, so water falling onto a curb stays there. Unlike a dam,
+  no spray where water meets it. Pools ignore curbs and rise over them.
+- **Ceilings**: deep water with a floor (or anything solid) right over it has
+  no surface. No one swims into it, and rising water lifts no one into it
+  (nor through a floor). A quaggle held under one stays put, standing in the
+  water, until it swims out sideways.
 - **Swimming**: deep water holds a swimmer up. A swimmer moves freely unless
   someone stands on its head, in which case it cannot move. A quaggle carrying
   riders cannot step into deep water; a lone quaggle can. A stack may step onto
@@ -63,7 +71,10 @@ can release a flood.
   exactly as without water. A slide that reaches deep water stops there and
   the quaggle floats.
 - **Waterfalls**: the base of a falling column (the cell it lands in) cannot be
-  entered from the side. Elsewhere, falling water is air to quaggles: they may
+  entered from the side, except by a quaggle with water on its head (or its
+  stack's): water spilling off it rings it with falls, and it may step out
+  through one fed only by that water, not one other water also pours into.
+  Elsewhere, falling water is air to quaggles: they may
   step into it only where the usual landing rule allows, and fall through it.
   A quaggle falling down a column lands in the base cell normally.
 

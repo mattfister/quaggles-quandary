@@ -5,7 +5,7 @@
 			"levels": [
 				{
 					"id": "intro_walk", "title": "First Steps",
-					"hint": "The Quaggles need to get home. Use the WASD or Arrow keys to get them to glowing  goal. Getting one Quaggle to the goal is good enough, they believe in collectivism.",
+					"hint": "The Quaggles have been banished into sky prisons and need to get home. Use the WASD or Arrow keys to get them to glowing  goal. Getting one Quaggle to the goal is good enough, they believe in collectivism.",
 					"floors": [
 						[
 							"",
@@ -99,6 +99,16 @@
 					]
 				},
 				{
+					"id": "intro_douse", "title": "Water Works",
+					"hint": "Some sky prisons are flooded with broken fountains. Water is widely known for its antagonistic effect on fire.  Quaggles like playing in the water, but sometimes it's best just to step aside.",
+					"floors": [
+						[
+							" .",
+							"~s.X..g"
+						]
+					]
+				},
+				{
 					"id": "intro_crack", "title": "Crumbling",
 					"hint": "The sky island prisons that the Quaggles have been trapped in are dangerous, and some of them are downright crumbling.",
 					"floors": [
@@ -142,18 +152,8 @@
 					]
 				},
 				{
-					"id": "intro_douse", "title": "Water Works",
-					"hint": "Springs pour out water, and water puts out fire. Quaggles think that's great, but they keep getting in its way. Sometimes the most helpful thing a Quaggle can do is step aside.",
-					"floors": [
-						[
-							" .",
-							"~s.X..g"
-						]
-					]
-				},
-				{
 					"id": "intro_plug", "title": "Stopper",
-					"hint": "Quaggles splash through shallow water without a care, but nobody walks through a waterfall. Standing on a spring stops it up.",
+					"hint": "Quaggles don't mind shallow water, it helps moisturize, but walking through a waterfall is just unpleasant. Some Quaggles have been known to plug fountains, this is quite pleasant indeed.",
 					"floors": [
 						[
 							"****",
@@ -169,18 +169,34 @@
 					"hint": "Quaggles float. Fill a pit with water and whoever is down there comes up with it. Quaggles can't carry anyone while they swim, but they don't mind being stood on.",
 					"floors": [
 						[
-							"   *",
-							"  *1*",
-							"   *"
+							"    ***",
+							"   **.**",
+							"   *...*",
+							"   **.**",
+							"   *...*",
+							"   *.1.*",
+							"   *...*",
+							"   *www*"
 						],
 						[
-							"   *",
-							"  * *",
-							"   *"
+							"    ***",
+							"   ** **",
+							"   *   *",
+							"   ** **",
+							"   *   *",
+							"   *   *",
+							"   *   *",
+							"   *www*"
 						],
 						[
-							"",
-							"~s. .g"
+							"    ***",
+							"   ** **",
+							"   *   *",
+							"s.2^^ ^^.",
+							" www^  *.",
+							" ^~3.  *g",
+							" ^^^   *",
+							"   ^^^^*"
 						]
 					]
 				}
@@ -301,6 +317,83 @@
 							"       *xxxxxxxxxx        x",
 							"                *xxxxxxxxxx",
 							"                          *"
+						]
+					]
+				},
+				{
+					"id": "firebreak", "title": "Firebreak",
+					"hint": "",
+					"floors": [
+						[
+							"*************",
+							"*************",
+							"s........XX.g",
+							".......",
+							"...*..."
+						],
+						[
+							"       ~",
+							"wwwwwww1wwwww"
+						]
+					]
+				},
+				{
+					"id": "moat", "title": "Moat",
+					"hint": "",
+					"floors": [
+						[
+							"***********",
+							"****..*****",
+							"****..*****",
+							"****..*****",
+							"****..*****",
+							"***********"
+						],
+						[
+							"    ww",
+							"   ~",
+							" s       g",
+							" 1",
+							" 1",
+							"    ww"
+						]
+					]
+				},
+				{
+					"id": "floodgate", "title": "Floodgate",
+					"hint": "",
+					"floors": [
+						[
+							"",
+							"************",
+							"************",
+							"******1*****",
+							"************",
+							"************"
+						],
+						[
+							"",
+							"************",
+							"************",
+							"****** *****",
+							"************",
+							"************"
+						],
+						[
+							"",
+							"*******",
+							"************",
+							"****** ....g",
+							"************",
+							"*******"
+						],
+						[
+							"",
+							" s",
+							"",
+							"    ~3 wwwww",
+							"",
+							" 2"
 						]
 					]
 				}

@@ -4,10 +4,14 @@ extends Node
 const FILES := {
 	"step": "step.wav", "land": "land.wav", "bump": "bump.wav", "slide": "slide.wav",
 	"crumble": "crumble.wav", "key": "key.wav", "burn": "burn.wav", "fall": "fall.wav",
-	"lift": "lift.ogg", "field": "field.wav", "win": "win.ogg", "lose": "lose.ogg",
+	"lift": "lift.ogg", "field": "unlock.ogg", "win": "win.ogg", "lose": "lose.ogg",
 	"click": "click.wav", "switch": "switch.ogg",
+	"splash": "splash.ogg", "paddle": "paddle.ogg", "pour": "pour.ogg", "drain": "drain.ogg", "hiss": "hiss.ogg",
 }
-const VOLUME_DB := {"step": -8.0, "slide": -6.0, "burn": -4.0, "lift": -6.0}
+const VOLUME_DB := {
+	"step": -8.0, "slide": -6.0, "burn": -4.0, "lift": -6.0,
+	"splash": -6.0, "paddle": -8.0, "pour": -9.0, "drain": -11.0, "hiss": -6.0,
+}
 
 var _streams := {}
 var _players: Array[AudioStreamPlayer] = []
