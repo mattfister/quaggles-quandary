@@ -26,7 +26,11 @@ A new tile, the **source** (`~`), emits water. Every water cell is one of:
   flowing water. Enclosure is judged on terrain only, never on quaggles. Only
   falling water creates pools; a source in a walled room just flows.
 
-**Deep** water is sources and pools. Flowing and falling water are not deep.
+**Deep** water is pools. Flowing and falling water are not deep, and nor is
+a source: it is a tile that can be stood on.
+
+**Plugging**: a quaggle standing on a source stops it up completely. A source
+covered by a pool is pool, and a quaggle there swims, so it does not stop it.
 
 ### What water occupies
 

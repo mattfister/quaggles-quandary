@@ -15,10 +15,16 @@ const SWITCH_DELAY := 0.4  # pause on a lost quaggle before moving to the next
 const DEFAULT_PITCH := 1.0  # about 57 degrees above the horizon
 const DEFAULT_DIST := 14.0
 const BLOCK := preload("res://shaders/block.gdshader")
+const BLOCK_FADE := preload("res://shaders/block_fade.gdshader")
 const FLOOR_COLORS: Array[Color] = [Color("5fc9b0"), Color("f6d58a"), Color("f3a08c"), Color("b9a6ee")]
 const WALL_TOP := Color("8a90b8")
 const WALL_SIDE := Color("5d638c")
 const SKY_HORIZON := Color("c4e4ff")
+const BASE_STEPS: Array[float] = [0.5, 1.0, 1.6]  # rock depth under the ground floor, by steps in from its edge
+const BASE_TOP := Color("c79a74")
+const BASE_SIDE := Color("a8775a")
+const CRACK_TOP := Color("c9a47a")
+const CRACK_SIDE := Color("8c6a4c")
 
 var rules: Rules
 var demo := false  # slow orbit, no marker (menu backdrop)
@@ -36,6 +42,9 @@ var _sky_mat := ShaderMaterial.new()
 var _marker := MeshInstance3D.new()
 var _cursor := MeshInstance3D.new()
 var _selection := MeshInstance3D.new()
+var _vignette := CanvasLayer.new()
+var _blob_mesh: PlaneMesh
+var _lava_mesh: PlaneMesh
 var _root: Node3D
 var _floors: Array[Node3D] = []
 var _quags := {}      # id -> Quaggle
@@ -51,7 +60,7 @@ var _dragging := false
 var _turn: Tween
 var _yaw_goal := 0.0
 
-var _crack_tex: ImageTexture
+var _chunk_meshes: Array[BoxMesh] = []  # a quarter of a cracked tile, a pebble
 var _ring_tex: ImageTexture
 var _dot_tex: ImageTexture
 var _particle_mat: StandardMaterial3D
@@ -84,7 +93,7 @@ func _ready() -> void:
 	add_child(sun)
 	sun.look_at_from_position(Vector3.ZERO, Vector3(-0.5, -1.0, -0.8))
 	sun.light_color = Color(1.0, 0.96, 0.88)
-	sun.light_energy = 0.85
+	sun.light_energy = 1.0
 	sun.shadow_enabled = true
 	sun.shadow_opacity = 0.55
 	sun.shadow_blur = 1.5
@@ -99,6 +108,13 @@ func _ready() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.78, 0.87, 1.0)
 	env.ambient_light_energy = 0.33
+	env.glow_enabled = true
+	env.glow_intensity = 0.6
+	env.glow_hdr_threshold = 1.0
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 1.08
+	env.adjustment_contrast = 1.05
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
@@ -121,6 +137,15 @@ func _ready() -> void:
 		box.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		box.visible = false
 		add_child(box)
+
+	var vignette := ColorRect.new()
+	vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vignette.material = ShaderMaterial.new()
+	(vignette.material as ShaderMaterial).shader = preload("res://shaders/vignette.gdshader")
+	_vignette.layer = -1
+	_vignette.add_child(vignette)
+	add_child(_vignette)
 
 
 static func cell_pos(p: Vector3i) -> Vector3:
@@ -164,15 +189,16 @@ func build(r: Rules, reset_camera := true) -> void:
 				# tile on it and flicker, so that wall is cut short.
 				var capped := _has_tile(r.cell(f + 1, x, y))
 				var low := Transform3D(Basis.IDENTITY, at + Vector3(0, LOW * 0.5, 0))
+				var joined := _joined(r, p)
 				match c:
 					Rules.WALL:
-						_group(groups, "wall_low" if capped else "wall", low if capped else column, shade * 0.5 + 0.5)
-					Rules.WINDOW: _group(groups, "window_low" if capped else "window", low if capped else column)
-					Rules.ICE: _group(groups, "ice", slab, shade * 0.5 + 0.5)
+						_group(groups, "wall_low" if capped else "wall", low if capped else column, shade * 0.5 + 0.5, joined)
+					Rules.WINDOW: _group(groups, "window_low" if capped else "window", low if capped else column, 1.0, joined)
+					Rules.ICE: _group(groups, "ice", slab, shade * 0.5 + 0.5, joined)
 					Rules.DOWN: _group(groups, "hole", slab)
 					Rules.CRACK: _add_crack(node, p)
 					_:
-						_group(groups, "tile", slab, shade)
+						_group(groups, "tile", slab, shade, joined)
 						match c:
 							Rules.GROUND, Rules.START, Rules.SPAWN, Rules.SOURCE: pass
 							Rules.FIRE: _add_fire(node, p)
@@ -184,6 +210,8 @@ func build(r: Rules, reset_camera := true) -> void:
 								_group(groups, "pad", Transform3D(Basis.IDENTITY, at + Vector3(0, 0.02, 0)))
 								_add_sparkles(node, at)
 							_: _group(groups, "block", Transform3D(Basis.IDENTITY, at + Vector3(0, 0.35, 0)))
+		if f == 0:
+			_add_base(groups)
 		for kind: String in groups:
 			_add_multimesh(node, kind, groups[kind], f)
 
@@ -201,6 +229,7 @@ func build(r: Rules, reset_camera := true) -> void:
 		quag.setup(q.id, absi(level_seed) + q.id * 3, rng)
 		quag.position = cell_pos(q.pos)
 		quag.face(Vector3(0, 0, 1))
+		_add_blob(quag)
 		_quags[q.id] = quag
 		if q.key:
 			_give_key(quag)
@@ -216,6 +245,30 @@ func build(r: Rules, reset_camera := true) -> void:
 ## Whether cell `c` has a floor tile (or ice or cracked tile) at its bottom.
 static func _has_tile(c: int) -> bool:
 	return c != Rules.EMPTY and c != Rules.WALL and c != Rules.WINDOW and c != Rules.DOWN
+
+
+## Which cells draw as one continuous shape with their like neighbours: 0 for
+## none, else a class shared by everything that merges together.
+static func _merge_class(c: int) -> int:
+	match c:
+		Rules.EMPTY, Rules.DOWN, Rules.CRACK: return 0
+		Rules.WALL: return 1
+		Rules.WINDOW: return 2
+		Rules.ICE: return 3
+	return 4
+
+
+## For the block shader: which of the cell's sides (+x, -x, +z, -z in world
+## axes) join a neighbour of the same merge class.
+static func _joined(r: Rules, p: Vector3i) -> Color:
+	var k := _merge_class(r.cell_at(p))
+	var j := Color(0, 0, 0, 0)
+	if k == 0:
+		return j
+	var sides: Array[Vector2i] = [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+	for i in 4:
+		j[i] = 1.0 if _merge_class(r.cell(p.z, p.x + sides[i].x, p.y + sides[i].y)) == k else 0.0
+	return j
 
 
 func set_floor_limit(n: int) -> void:
@@ -346,10 +399,8 @@ func _apply_cell(e: Dictionary, gen: int) -> void:
 			if below == Rules.WALL or below == Rules.WINDOW:
 				_add_cap(p, below)
 			for n: Node3D in nodes:
-				var tw := n.create_tween().set_parallel()
-				tw.tween_property(n, "position:y", n.position.y - 6.0, 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-				tw.tween_property(n, "rotation", Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)), 0.6)
-				tw.chain().tween_callback(n.queue_free)
+				n.queue_free()
+			_crumble(p)
 			_puff(at, Color(0.5, 0.42, 0.35))
 		Rules.KEY:
 			Sfx.play("key")
@@ -389,6 +440,11 @@ func _process(delta: float) -> void:
 	var offset := Vector3(0, sin(pitch), cos(pitch)).rotated(Vector3.UP, yaw) * dist
 	_camera.position = _focus + offset
 	_camera.look_at(_focus)
+
+	_vignette.visible = not edit_mode
+	for child in _root.get_children():
+		if child is Quaggle:
+			_place_blob(child)
 
 	var quag: Quaggle = _quags.get(_shown)
 	_marker.visible = quag != null and not demo and not edit_mode and not rules.won
@@ -487,10 +543,48 @@ func hide_box(selection := false) -> void:
 
 # --- construction helpers ---------------------------------------------------
 
-func _group(groups: Dictionary, kind: String, t: Transform3D, shade := 1.0) -> void:
+func _group(groups: Dictionary, kind: String, t: Transform3D, shade := 1.0, joined := Color(0, 0, 0, 0)) -> void:
 	if not groups.has(kind):
 		groups[kind] = []
-	groups[kind].append([t, Color(shade, shade, shade)])
+	groups[kind].append([t, Color(shade, shade, shade), joined])
+
+
+## The rock under the ground floor, stepping deeper toward the middle so the
+## level reads as a solid floating island. Groups "base:<height in cm>".
+func _add_base(groups: Dictionary) -> void:
+	var sides: Array[Vector2i] = [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+	for y in rules.height:
+		for x in rules.width:
+			if not _on_base(x, y):
+				continue
+			# Steps in from the edge, counting diagonals.
+			var steps := 1
+			while steps < BASE_STEPS.size() and _base_square(x, y, steps):
+				steps += 1
+			var c := rules.cell(0, x, y)
+			# Walls stand on y = 0 with no tile under them; fill that in.
+			var top := 0.0 if c == Rules.WALL or c == Rules.WINDOW else -TILE_T
+			var height := BASE_STEPS[steps - 1] + top + TILE_T
+			var joined := Color(0, 0, 0, 0)
+			for i in 4:
+				joined[i] = 1.0 if _on_base(x + sides[i].x, y + sides[i].y) else 0.0
+			var at := cell_pos(Vector3i(x, y, 0)) + Vector3(0, top - height * 0.5, 0)
+			var shade := 1.0 if (x + y) % 2 == 0 else 0.96
+			_group(groups, "base:%d" % roundi(height * 100.0), Transform3D(Basis.IDENTITY, at), shade, joined)
+
+
+func _on_base(x: int, y: int) -> bool:
+	var c := rules.cell(0, x, y)
+	return c != Rules.EMPTY and c != Rules.DOWN and c != Rules.CRACK
+
+
+## Whether every cell within `r` of (x, y) is on the base.
+func _base_square(x: int, y: int, r: int) -> bool:
+	for dy in range(-r, r + 1):
+		for dx in range(-r, r + 1):
+			if not _on_base(x + dx, y + dy):
+				return false
+	return true
 
 
 func _add_multimesh(parent: Node3D, kind: String, items: Array, f: int) -> void:
@@ -498,6 +592,11 @@ func _add_multimesh(parent: Node3D, kind: String, items: Array, f: int) -> void:
 	var mat: Material
 	var floor_color := FLOOR_COLORS[f % FLOOR_COLORS.size()]
 	var shadows := true
+	if kind.begins_with("base:"):
+		box.size = Vector3(1, kind.substr(5).to_float() / 100.0, 1)
+		mat = _block(box.size, BASE_TOP, BASE_SIDE)
+		(mat as ShaderMaterial).set_shader_parameter("shade_span", Vector2(0.15, 0.85))
+		shadows = false
 	match kind:
 		"tile":
 			box.size = Vector3(1, TILE_T, 1)
@@ -505,7 +604,6 @@ func _add_multimesh(parent: Node3D, kind: String, items: Array, f: int) -> void:
 		"ice":
 			box.size = Vector3(1, TILE_T, 1)
 			var ice := _block(box.size, Color("a9e4ff"), Color("6fa9d0"))
-			ice.set_shader_parameter("roughness", 0.12)
 			ice.set_shader_parameter("streaks", 1.0)
 			ice.set_shader_parameter("edge", 0.03)
 			mat = ice
@@ -513,8 +611,8 @@ func _add_multimesh(parent: Node3D, kind: String, items: Array, f: int) -> void:
 			box.size = Vector3(1, H if kind == "wall" else LOW, 1)
 			mat = _wall_mat(box.size, 0.0, box.size.y / H)
 		"window", "window_low":
-			box.size = Vector3(0.96, H if kind == "window" else LOW, 0.96)
-			mat = _glass_mat()
+			box.size = Vector3(1, H if kind == "window" else LOW, 1)
+			mat = _glass_mat(box.size)
 			shadows = false
 		"hole":
 			box.size = Vector3(0.9, 0.03, 0.9)
@@ -537,6 +635,7 @@ func _add_multimesh(parent: Node3D, kind: String, items: Array, f: int) -> void:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_colors = true
+	mm.use_custom_data = true
 	mm.mesh = box
 	mm.instance_count = items.size()
 	for i in items.size():
@@ -545,6 +644,7 @@ func _add_multimesh(parent: Node3D, kind: String, items: Array, f: int) -> void:
 			t.origin.y += (box.size.y - H) * 0.5
 		mm.set_instance_transform(i, t)
 		mm.set_instance_color(i, items[i][1])
+		mm.set_instance_custom_data(i, items[i][2])
 	var inst := MultiMeshInstance3D.new()
 	inst.multimesh = mm
 	inst.material_override = mat
@@ -559,10 +659,10 @@ func _wall_mat(size: Vector3, from: float, to: float) -> ShaderMaterial:
 	return m
 
 
-func _glass_mat() -> StandardMaterial3D:
-	var glass := _flat(Color(0.55, 0.8, 0.98, 0.62), 0.0)
-	glass.roughness = 0.05
-	glass.metallic = 0.2
+func _glass_mat(size: Vector3) -> ShaderMaterial:
+	var glass := ShaderMaterial.new()
+	glass.shader = preload("res://shaders/glass.gdshader")
+	glass.set_shader_parameter("size", size)
 	return glass
 
 
@@ -575,17 +675,17 @@ func _add_cap(p: Vector3i, below: int) -> void:
 		box.size = Vector3(1, TILE_T, 1)
 		cap.material_override = _wall_mat(box.size, LOW / H, 1.0)
 	else:
-		box.size = Vector3(0.96, TILE_T, 0.96)
-		cap.material_override = _glass_mat()
+		box.size = Vector3(1, TILE_T, 1)
+		cap.material_override = _glass_mat(box.size)
 		cap.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	cap.mesh = box
 	cap.position = cell_pos(p) - Vector3(0, TILE_T * 0.5, 0)
 	_floors[p.z - 1].add_child(cap)
 
 
-func _block(size: Vector3, top: Color, side: Color) -> ShaderMaterial:
+func _block(size: Vector3, top: Color, side: Color, shader: Shader = BLOCK) -> ShaderMaterial:
 	var m := ShaderMaterial.new()
-	m.shader = BLOCK
+	m.shader = shader
 	m.set_shader_parameter("size", size)
 	m.set_shader_parameter("top_color", top)
 	m.set_shader_parameter("side_color", side)
@@ -616,23 +716,75 @@ func _add_crack(parent: Node3D, p: Vector3i) -> void:
 	var box := BoxMesh.new()
 	box.size = Vector3(0.94, TILE_T, 0.94)
 	tile.mesh = box
-	var mat := _block(box.size, Color("d9b48c"), Color("8f6f52"))
-	mat.set_shader_parameter("detail", _crack_tex)
+	var mat := _block(box.size, CRACK_TOP, CRACK_SIDE)
+	mat.set_shader_parameter("cracks", 1.0)
+	mat.set_shader_parameter("crack_seed", float(hash(p) % 1000))
 	tile.material_override = mat
 	tile.position = cell_pos(p) - Vector3(0, TILE_T * 0.5, 0)
 	parent.add_child(tile)
 	_track(p, tile)
 
 
+## Breaks a cracked tile into its four quarters and some loose pebbles, which
+## shiver, then tumble away one by one, fading out as they go.
+func _crumble(p: Vector3i) -> void:
+	if _chunk_meshes.is_empty():
+		for size: float in [0.45, 0.13]:
+			var box := BoxMesh.new()
+			box.size = Vector3(size, TILE_T if size > 0.2 else size, size)
+			_chunk_meshes.append(box)
+	var middle := cell_pos(p) - Vector3(0, TILE_T * 0.5, 0)
+	for i in 10:
+		var quarter := i < 4
+		var chunk := MeshInstance3D.new()
+		var box := _chunk_meshes[0 if quarter else 1]
+		chunk.mesh = box
+		# Each its own material, to fade on its own.
+		var mat := _block(box.size, CRACK_TOP, CRACK_SIDE, BLOCK_FADE)
+		if quarter:
+			mat.set_shader_parameter("cracks", 1.0)
+			mat.set_shader_parameter("crack_seed", float(hash(p) % 1000 + i))
+		chunk.material_override = mat
+		chunk.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var spot := Vector3(randf_range(-0.35, 0.35), randf_range(-0.05, 0.1), randf_range(-0.35, 0.35))
+		if quarter:
+			spot = Vector3(0.235 if i % 2 else -0.235, 0, 0.235 if i < 2 else -0.235)
+		chunk.position = middle + spot
+		chunk.rotation.y = randf_range(-0.12, 0.12) if quarter else randf_range(0, TAU)
+		chunk.scale = Vector3.ONE * randf_range(0.9, 1.0)
+		_root.add_child(chunk)
+		var tw := chunk.create_tween()
+		for k in 3:
+			var shiver := Vector3(randf_range(-0.025, 0.025), 0, randf_range(-0.025, 0.025))
+			tw.tween_property(chunk, "position", middle + spot + shiver, 0.03)
+		tw.tween_interval(randf_range(0.0, 0.2) if quarter else randf_range(0.0, 0.06))
+		var drift := spot * randf_range(0.5, 1.2) + Vector3(randf_range(-0.15, 0.15), 0, randf_range(-0.15, 0.15))
+		tw.tween_property(chunk, "position", middle + spot + drift + Vector3(0, -6.0, 0), 0.75) \
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(chunk, "rotation", Vector3(randf_range(-3, 3), randf_range(-2, 2), randf_range(-3, 3)), 0.75)
+		var fade := func(v: float) -> void: mat.set_shader_parameter("fade", v)
+		tw.parallel().tween_method(fade, 0.0, 1.0, 0.45).set_delay(0.3)
+		tw.tween_callback(chunk.queue_free)
+
+
 func _add_fire(parent: Node3D, p: Vector3i) -> void:
+	if _lava_mesh == null:
+		_lava_mesh = PlaneMesh.new()
+		_lava_mesh.size = Vector2(1, 1)
 	var fire := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(0.94, 0.03, 0.94)
-	fire.mesh = box
+	fire.mesh = _lava_mesh
+	# Edged with a crust where it does not meet more fire, so a run of fire
+	# is one pool (the lava's pattern is in world space, so it carries on).
+	var joined := Color(0, 0, 0, 0)
+	var sides: Array[Vector2i] = [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+	for i in 4:
+		joined[i] = 1.0 if rules.cell(p.z, p.x + sides[i].x, p.y + sides[i].y) == Rules.FIRE else 0.0
 	var lava := ShaderMaterial.new()
 	lava.shader = preload("res://shaders/lava.gdshader")
+	lava.set_shader_parameter("size", Vector3(1, 0, 1))
+	lava.set_shader_parameter("joined", joined)
 	fire.material_override = lava
-	fire.position = cell_pos(p) + Vector3(0, 0.015, 0)
+	fire.position = cell_pos(p) + Vector3(0, 0.003, 0)  # flush on the tile, no sides
 	fire.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(fire)
 	_track(p, fire)
@@ -696,6 +848,49 @@ func _give_key(quag: Quaggle) -> void:
 	key.set_meta("base_y", key.position.y)
 	quag.add_child(key)
 	_spinners.append(key)
+
+
+## A soft round shadow under a quaggle, kept by _place_blob on whatever
+## surface is below it so heights and drops read clearly.
+func _add_blob(quag: Quaggle) -> void:
+	if _blob_mesh == null:
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.albedo_color = Color(0.05, 0.08, 0.2, 0.5)
+		mat.albedo_texture = _dot_tex
+		mat.render_priority = -1
+		_blob_mesh = PlaneMesh.new()
+		_blob_mesh.size = Vector2(0.95, 0.95)
+		_blob_mesh.material = mat
+	var blob := MeshInstance3D.new()
+	blob.name = "Blob"
+	blob.mesh = _blob_mesh
+	blob.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	blob.top_level = true
+	quag.add_child(blob)
+
+
+func _place_blob(quag: Quaggle) -> void:
+	var blob: MeshInstance3D = quag.get_node_or_null("Blob")
+	if blob == null:
+		return
+	var at := quag.position
+	var x := floori(-at.x)
+	var y := floori(at.z)
+	var ground := -1
+	for f in range(mini(floori(at.y / H + 0.05), floor_limit - 1), -1, -1):
+		var below := rules.cell(f - 1, x, y)
+		if _has_tile(rules.cell(f, x, y)) or below == Rules.WALL or below == Rules.WINDOW:
+			ground = f
+			break
+	var fade := clampf(1.0 - (at.y - ground * H) / 6.0, 0.0, 1.0)
+	blob.visible = quag.visible and ground >= 0 and fade > 0.0
+	if not blob.visible:
+		return
+	blob.global_position = Vector3(at.x, ground * H + 0.045, at.z)
+	blob.scale = Vector3.ONE * lerpf(0.55, 1.0, fade)
+	blob.transparency = 1.0 - fade
 
 
 ## Spends the key a quaggle is carrying.
@@ -814,22 +1009,15 @@ func _ramp(colors: Array) -> Gradient:
 
 func _make_textures() -> void:
 	const N := 32
-	var noise := FastNoiseLite.new()
-	noise.seed = 2007
-	noise.frequency = 0.12
-	var crack := Image.create(N, N, true, Image.FORMAT_RGBA8)
 	var ring := Image.create(N, N, true, Image.FORMAT_RGBA8)
 	var dot := Image.create(N, N, true, Image.FORMAT_RGBA8)
 	for i in N:
 		for j in N:
-			var n := 1.0 - absf(noise.get_noise_2d(i, j)) * 2.2
-			crack.set_pixel(i, j, Color(0.25, 0.18, 0.12) if n > 0.9 else Color.WHITE)
 			var rim := i < 3 or j < 3 or i >= N - 3 or j >= N - 3
 			ring.set_pixel(i, j, Color(1, 1, 1, 1.0 if rim else 0.0))
 			var d := Vector2(i - N * 0.5 + 0.5, j - N * 0.5 + 0.5).length() / (N * 0.5)
 			dot.set_pixel(i, j, Color(1, 1, 1, clampf(1.0 - d, 0.0, 1.0)))
-	for img: Image in [crack, ring, dot]:
+	for img: Image in [ring, dot]:
 		img.generate_mipmaps()
-	_crack_tex = ImageTexture.create_from_image(crack)
 	_ring_tex = ImageTexture.create_from_image(ring)
 	_dot_tex = ImageTexture.create_from_image(dot)

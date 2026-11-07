@@ -33,7 +33,7 @@ const TILES := [
 	[Rules.KEY, "Key", "2", "Switches off one force field; used up."],
 	[Rules.FIELD, "Force field", "3", "Solid until a key carrier walks in."],
 	[Rules.CRACK, "Cracked", "4", "Crumbles once you step off it."],
-	[Rules.SOURCE, "Spring", "~", "Water flows 3 cells, falls off edges and fills pits it pours into. Quaggles dam it, swim in deep water, and it puts out fire."],
+	[Rules.SOURCE, "Spring", "~", "Water flows 3 cells, falls off edges and fills pits it pours into. Quaggles dam it, stop it up by standing on it, and swim in pools. It puts out fire."],
 	[Rules.UP, "Lift", "u", "Raises whoever steps in (and their stack) one floor."],
 	[Rules.GOAL, "Goal", "g", "Get any quaggle here to win."],
 	[Rules.START, "Start", "s", "A quaggle; play begins with the first of these."],

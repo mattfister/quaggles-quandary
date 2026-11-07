@@ -94,7 +94,8 @@ func _show(screen: Control) -> void:
 	if screen != _hud and (playing or world.rules == null):
 		playing = false
 		world.demo = true
-		world.build(Rules.load_level("level1"))
+		var backdrop: String = "level1" if not Levels.find("level1").is_empty() else Levels.all()[0].id
+		world.build(Rules.load_level(backdrop))
 		world.pitch = 0.7
 		world.dist = 17.0
 

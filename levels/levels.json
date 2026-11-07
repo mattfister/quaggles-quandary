@@ -129,11 +129,58 @@
 							"********",
 							"*      *",
 							"* g**  *",
-							"*   *  *",
-							"*   *  *",
-							"**..** *",
-							"u...*u.*",
-							".."
+							"*4  *  *",
+							"*44 *  *",
+							"**44** *",
+							"u444*u.*",
+							"4444",
+							"www"
+						],
+						[
+							""
+						]
+					]
+				},
+				{
+					"id": "intro_douse", "title": "Water Works",
+					"hint": "Springs pour out water, and water puts out fire. Quaggles think that's great, but they keep getting in its way. Sometimes the most helpful thing a Quaggle can do is step aside.",
+					"floors": [
+						[
+							" .",
+							"~s.X..g"
+						]
+					]
+				},
+				{
+					"id": "intro_plug", "title": "Stopper",
+					"hint": "Quaggles splash through shallow water without a care, but nobody walks through a waterfall. Standing on a spring stops it up.",
+					"floors": [
+						[
+							"****",
+							"s......g"
+						],
+						[
+							"  1~"
+						]
+					]
+				},
+				{
+					"id": "intro_float", "title": "Rising Tide",
+					"hint": "Quaggles float. Fill a pit with water and whoever is down there comes up with it. Quaggles can't carry anyone while they swim, but they don't mind being stood on.",
+					"floors": [
+						[
+							"   *",
+							"  *1*",
+							"   *"
+						],
+						[
+							"   *",
+							"  * *",
+							"   *"
+						],
+						[
+							"",
+							"~s. .g"
 						]
 					]
 				}
@@ -154,20 +201,6 @@
 						[
 							"",
 							" s   2    g"
-						]
-					]
-				},
-				{
-					"id": "hot_ice", "title": "Hot Ice",
-					"hint": "",
-					"floors": [
-						[
-							"**********",
-							"*s.xxxxX.*",
-							"*1.xx*xx.*",
-							"****xxxx.*",
-							"   *xxX*g*",
-							"   *******"
 						]
 					]
 				},
@@ -202,173 +235,7 @@
 					]
 				},
 				{
-					"id": "rooftops", "title": "Rooftops",
-					"hint": "",
-					"floors": [
-						[
-							"",
-							"s1u**.**23g",
-							"......"
-						],
-						[
-							""
-						]
-					]
-				},
-				{
-					"id": "key_relay", "title": "Key Relay",
-					"hint": "",
-					"floors": [
-						[
-							"*********",
-							"*s.X.2*",
-							"*1....X3g",
-							"*1*******"
-						]
-					]
-				},
-				{
-					"id": "fire_drill", "title": "Fire Drill",
-					"hint": "",
-					"floors": [
-						[
-							".....",
-							"1....X....",
-							"1...."
-						],
-						[
-							"",
-							"   s.  ..g"
-						]
-					]
-				},
-				{
-					"id": "level4", "title": "Keymaster",
-					"hint": "",
-					"floors": [
-						[
-							"",
-							"",
-							"",
-							"    *   *",
-							"****.* *.******",
-							"XXXX......X3g.*",
-							"",
-							".. .. .. .. ..",
-							"wwwwwwwwwwwwww",
-							"wwwwwwwwwwwwww",
-							".. .. .. .. .."
-						],
-						[
-							"****** ***",
-							"*....* *1*",
-							"*s..2* *.*",
-							"*....* *.*",
-							"****.* *.*"
-						]
-					]
-				},
-				{
-					"id": "level5", "title": "Elevator Pitch",
-					"hint": "",
-					"floors": [
-						[
-							"",
-							"",
-							"",
-							"    *   *",
-							"****.* *.******",
-							"XXXXu...u.X3g.*",
-							"",
-							".. .. .. .. ..",
-							"wwwwwwwwwwwwww",
-							"wwwwwwwwwwwwww",
-							".. .. .. .. .."
-						],
-						[
-							"****** ***",
-							"*....* *1*",
-							"*s..2* *.*",
-							"*....* *.*",
-							"****.* *.*"
-						]
-					]
-				},
-				{
-					"id": "level2", "title": "The Long Way Down",
-					"hint": "",
-					"floors": [
-						[
-							"          w.w",
-							"          w.w",
-							"          w.w",
-							"          w.w*****",
-							"   *wwwwwww.w.....",
-							"   *..........   *",
-							"   ***          ...",
-							"                .g.",
-							"                ..."
-						],
-						[
-							"wwwwwwwwwww",
-							"*s.........",
-							"*..........",
-							"*..........",
-							"****.******",
-							"",
-							"   *1*",
-							"   ***"
-						]
-					]
-				},
-				{
-					"id": "level1", "title": "Stepping Stone",
-					"hint": "",
-					"floors": [
-						[
-							"         *************",
-							"         *...........*",
-							"         *...........*",
-							"         *...........*",
-							"         *...........*",
-							"         *...........*",
-							"         *......14444*",
-							"         *************"
-						],
-						[
-							"**********************",
-							"*.......... .........*",
-							"*s......... .....g...*",
-							"*.......... .........*",
-							"**********************"
-						]
-					]
-				},
-				{
-					"id": "level3", "title": "Burnt Bridge",
-					"hint": "",
-					"floors": [
-						[
-							"         *************",
-							"         *...........*",
-							"         *...........*",
-							"         *...........*",
-							"         *...........*",
-							"         *...........*",
-							"         *......1....*",
-							"         *************"
-						],
-						[
-							"**********************",
-							"*.........X .........*",
-							"*s........X .....g...*",
-							"*s........X .........*",
-							"**********************"
-						]
-					]
-				},
-				{
-					"id": "level6", "title": "Ice Hall",
+					"id": "level6", "title": "Ice Forge",
 					"hint": "",
 					"floors": [
 						[
@@ -380,18 +247,18 @@
 							"          w.w",
 							"          w.w",
 							"ww        w.w  w    w",
-							"..        w1w  u    .",
+							"..        w.w       u",
 							"....................."
 						],
 						[
-							"*******...*************************",
-							"*s..wxxx*xx XX..3....xxxxxxxx*xxxx*",
-							"*...wxxxxx* XX..3....xxxXxxxxxxxxx*",
-							"*...xxxXxxx XXX.3....xxx*xxxxx*xXx*",
-							"*...xxxxXxx 2.X.3....XxxxxxxxxxxXx*",
-							"*...xxxxX*x XXX.3....xxxxxxx*xx*33*",
-							"*1..xxxx*xx XX..3....xxx*xxxxxx*3g*",
-							"*.*************.****.**************"
+							"*******...*******....  * *  *******",
+							"*s..wxxx*xx XXXX*....xxxxxxxx*xxxx*",
+							"*...wxxxxx* XXXX*....xxxXxxxxxxxxx*",
+							"*...xxxXxxx XXXX*....xxx*xxxxx*xXx*",
+							"*...xxxxXxx 2.XX*....XxxxxxxxxxxXx*",
+							"*...xxxxX*x XXXX*....xxxxxxx*xx*33*",
+							"*1..xxxx*xx XXXX*....xxx*xxxxxx*3g*",
+							"*.***************....          ****"
 						]
 					]
 				},

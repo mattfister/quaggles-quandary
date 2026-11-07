@@ -64,10 +64,10 @@ func level_at(p: Vector3i) -> int:
 	return level[_i(p)] if _inside(p) else 0
 
 
-## Springs and pools: deep enough to swim in.
+## Pools: deep enough to swim in. A spring is not: it is a tile, and a
+## quaggle standing on it stops it up (unless a pool covers it).
 func is_deep(p: Vector3i) -> bool:
-	var k := kind_at(p)
-	return k == POOL or k == SOURCE
+	return kind_at(p) == POOL
 
 
 ## The cell a waterfall lands in, which cannot be walked into.
@@ -130,7 +130,7 @@ func _fill(r: Rules, blockers: Dictionary) -> void:
 			kind[i] = NONE
 			level[i] = 0
 			dist[i] = 0
-			if r.grid[i] == Rules.SOURCE:
+			if r.grid[i] == Rules.SOURCE and not blockers.has(pos(i)):
 				_put(pos(i), SOURCE, STRENGTH, 0)
 				queue.append(pos(i))
 		for p: Vector3i in spill:
@@ -199,10 +199,9 @@ func _pools(r: Rules, spill: Dictionary) -> bool:
 				break
 			var next: Array[Vector3i] = []
 			for q in basin:
-				if kind_at(q) != SOURCE:
-					if kind_at(q) != POOL:
-						grew = true
-					_put(q, POOL, STRENGTH, d + depth)
+				if kind_at(q) != POOL:
+					grew = true
+				_put(q, POOL, STRENGTH, d + depth)
 				if q.z + 1 < floors:
 					next.append(q + UP)
 			depth += 1

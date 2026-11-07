@@ -8,6 +8,12 @@ var failures := 0
 ## (0, 1) is held back by a quaggle (id 2) at (1, 1, 2); glass walls the
 ## channel, with a nook at (1, 0, 2) to step aside into. Quaggles 0 and 1
 ## start on the pit floor.
+## A pit three wide (x 2-4, row 1) that the spring on floor 1 pours into
+## at x 2. Quaggles 0 and 1 start on floor 1's row 2.
+const POOL := [
+	["******", "**...*", "******"],
+	["~     ", "      ", "s1    "],
+]
 const FLOOD := [
 	["*****", "**s1*", "*****"],
 	["*****", "**  *", "*****"],
@@ -89,7 +95,7 @@ func pools() -> void:
 	w = Water.compute(r)
 	check(w.kind_at(Vector3i(1, 1, 1)) == Water.POOL, "the pool rises to the level the water fell from")
 	check(w.kind_at(Vector3i(1, 1, 2)) == Water.NONE, "but no higher")
-	check(w.kind_at(Vector3i(2, 1, 1)) == Water.SOURCE, "a spring in a pool stays a spring")
+	check(w.kind_at(Vector3i(2, 1, 1)) == Water.POOL, "a spring under a pool is pool too")
 
 
 func dams() -> void:
@@ -138,35 +144,42 @@ func rules_water() -> void:
 
 
 func swimming() -> void:
-	var r := Rules.from_floors("slide in", [["sx~"]])
+	var r := Rules.from_floors("plug", [["s~..."]])
+	check(r.water.kind_at(Vector3i(3, 0, 0)) == Water.FLOW, "a spring flows")
 	walk(r, 0, "r")
-	check(r.quaggles[0].pos == Vector3i(2, 0, 0) and not r.quaggles[0].gone, "a slide stops in deep water")
-
-	r = Rules.from_floors("no stacks", [["s1~"]])
-	r.quaggles[1].pos = Vector3i(0, 0, 1)
+	check(r.quaggles[0].pos == Vector3i(1, 0, 0), "a spring can be stood on")
+	check(r.water.kind_at(Vector3i(1, 0, 0)) == Water.NONE and r.water.kind_at(Vector3i(2, 0, 0)) == Water.NONE,
+		"standing on a spring stops it up")
+	r = Rules.from_floors("swim on a spring", [
+		["****", "*.**", "****"],
+		["****", "* ~*", "****"],
+		["****", "*  *", "****"],
+	])
+	r.quaggles.append({"id": 0, "pos": Vector3i(2, 1, 1), "dead": false, "gone": false, "key": false})
 	r.restore(r.snapshot())
+	check(r.water.kind_at(Vector3i(1, 1, 0)) == Water.POOL, "swimming over a spring under a pool does not stop it")
+
+	r = Rules.from_floors("slide in", [["******", "**...*", "******"], ["~     ", "sx    ", "      "]])
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(2, 1, 0) and not r.quaggles[0].gone, "a slide off a ledge ends swimming in the pool")
+
+	# Quaggle 0 on the rim at (1, 1, 1) with quaggle 1 on its head.
+	r = Rules.from_floors("pool", POOL)
+	r.quaggles[0].pos = Vector3i(1, 1, 1)
+	r.quaggles[1].pos = Vector3i(1, 1, 2)
+	r.restore(r.snapshot())
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(1, 1, 1), "a stack cannot drop into deep water")
+	walk(r, 1, "r")
+	check(r.quaggles[1].pos == Vector3i(2, 1, 0), "a lone quaggle drops in and swims")
+	walk(r, 0, "r")
+	check(r.quaggles[0].pos == Vector3i(2, 1, 1), "a swimmer's head is a stepping stone")
+	walk(r, 1, "r")
+	check(r.quaggles[1].pos == Vector3i(2, 1, 0), "a swimmer with someone on its head is stuck")
 	walk(r, 0, "rr")
-	check(r.quaggles[0].pos == Vector3i(1, 0, 0), "a stack cannot step into deep water")
-
-	r = Rules.from_floors("no drops", [["*~ "], ["s 1"]])
-	r.quaggles[1].pos = Vector3i(0, 0, 2)
-	r.restore(r.snapshot())
-	walk(r, 0, "r")
-	check(r.quaggles[0].pos == Vector3i(0, 0, 1), "a stack cannot drop into deep water")
 	walk(r, 1, "r")
-	check(r.quaggles[1].pos == Vector3i(1, 0, 0), "a lone quaggle drops in and swims")
-
-	# Quaggle 0 swims in the spring at (1, 0); quaggle 1 starts on the wall.
-	r = Rules.from_floors("pinned", [["*~~~1"], ["s"]])
-	r.quaggles[0].pos = Vector3i(1, 0, 0)
-	r.restore(r.snapshot())
-	walk(r, 1, "r")
-	check(r.quaggles[1].pos == Vector3i(1, 0, 1), "a swimmer's head is a stepping stone")
-	walk(r, 0, "r")
-	check(r.quaggles[0].pos == Vector3i(1, 0, 0), "a swimmer with someone on its head is stuck")
-	walk(r, 1, "rr")
-	walk(r, 0, "r")
-	check(r.quaggles[0].pos == Vector3i(2, 0, 0), "and free once they go")
+	check(r.quaggles[0].pos == Vector3i(4, 1, 0) and r.quaggles[1].pos == Vector3i(3, 1, 0),
+		"and free once they go")
 
 	r = Rules.from_floors("base", [["...s"], ["~.  "]])
 	walk(r, 0, "l")
@@ -174,7 +187,6 @@ func swimming() -> void:
 	r = Rules.from_floors("curtain", [["~. s"]])
 	walk(r, 0, "l")
 	check(r.quaggles[0].pos == Vector3i(3, 0, 0), "a waterfall over nothing holds no one up")
-
 
 func floating() -> void:
 	var r := Rules.from_floors("flood", FLOOD)
@@ -190,15 +202,15 @@ func floating() -> void:
 	check(r.quaggles[1].pos == Vector3i(3, 1, 1), "the rider steps off into the pool and swims")
 
 
-## Every level still loads with no water, and random play neither errors
-## nor hangs.
+## Every level loads, with water just where it has a spring, and random play
+## neither errors nor hangs.
 func existing_levels() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 2007
 	const DIRS := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
 	for level: Dictionary in Levels.all():
 		var r := Rules.load_level(level.id)
-		check(r != null and r.water == null, "%s loads, dry" % level.id)
+		check(r != null and (r.water != null) == r.grid.has(Rules.SOURCE), "%s loads" % level.id)
 		for i in 300:
 			if r.won or r.lost:
 				break

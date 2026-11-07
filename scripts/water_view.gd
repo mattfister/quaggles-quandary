@@ -54,7 +54,34 @@ func play(e: Dictionary, start: float, water: Water) -> float:
 			tw.tween_interval(t)
 			tw.tween_property(part, "scale", Vector3.ONE, GROW).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		longest = maxf(longest, c.delay * RIPPLE)
+	# Pools and falls take their height from the water around them, so redraw
+	# those next to a change as it happens.
+	var changed := {}
+	for c: Dictionary in e.removed + e.added:
+		changed[c.pos] = start + c.delay * RIPPLE
+	for p: Vector3i in changed:
+		for n in [p - Water.UP, p + Vector3i(1, 0, 0), p - Vector3i(1, 0, 0), p + Vector3i(0, 1, 0), p - Vector3i(0, 1, 0)]:
+			var k := water.kind_at(n)
+			if (k == Water.POOL or k == Water.FALL) and _cells.has(n) and not changed.has(n):
+				_swap(n, changed[p], water)
 	return longest + GROW
+
+
+## Redraws the water at `p` as `water` has it, `t` seconds from now.
+func _swap(p: Vector3i, t: float, water: Water) -> void:
+	var old: Array = _cells.get(p, [])
+	var parts := _make(p, water.kind_at(p), water.level_at(p), water)
+	_place(p, parts)
+	for part in parts:
+		part.visible = false
+	var tw := create_tween()
+	tw.tween_interval(t)
+	tw.tween_callback(func() -> void:
+		for o: MeshInstance3D in old:
+			if is_instance_valid(o):
+				o.queue_free()
+		for part in parts:
+			part.visible = true)
 
 
 func _place(p: Vector3i, parts: Array[MeshInstance3D]) -> void:
@@ -82,17 +109,33 @@ func _make(p: Vector3i, k: int, l: int, water: Water) -> Array[MeshInstance3D]:
 			var t := SHEET * l
 			parts.append(_box(Vector3(1, t, 1), at + Vector3(0, t * 0.5 + 0.01, 0), _still))
 		Water.POOL:
-			# Full to the brim under more pool; the top cell shows a surface.
-			var h := World.H if water.kind_at(p + Water.UP) == Water.POOL else World.H * 0.7
+			# Under more water a pool fills its cell; on top, it stands as
+			# high as the water that filled it.
+			var h := World.H if water.kind_at(p + Water.UP) != Water.NONE else SHEET * Water.STRENGTH
 			parts.append(_box(Vector3(1, h, 1), at + Vector3(0, h * 0.5, 0), _still))
 		Water.SOURCE:
-			parts.append(_box(Vector3(0.9, 0.35, 0.9), at + Vector3(0, 0.175, 0), _still))
+			var t := SHEET * Water.STRENGTH
+			parts.append(_box(Vector3(1, t, 1), at + Vector3(0, t * 0.5 + 0.01, 0), _still))
 			parts.append(_box(Vector3(0.3, 0.5, 0.3), at + Vector3(0, 0.25, 0), _falling))
 		Water.FALL:
-			parts.append(_box(Vector3(0.8, World.H, 0.8), at + Vector3(0, World.H * 0.5, 0), _falling))
+			# Falling water pours over the lip at the height it flowed in at,
+			# then down through the cell below to where it lands.
+			var lip := 0.0 if water.kind_at(p + Water.UP) == Water.FALL else SHEET * _inflow(p, water)
+			var h := World.H + lip
+			parts.append(_box(Vector3(0.9, h, 0.9), at + Vector3(0, lip - h * 0.5, 0), _falling))
 			if p.z == 0:
-				parts.append(_box(Vector3(0.8, VOID_DROP, 0.8), at - Vector3(0, VOID_DROP * 0.5, 0), _vanishing))
+				parts.append(_box(Vector3(0.9, VOID_DROP, 0.9), at - Vector3(0, World.H + VOID_DROP * 0.5, 0), _vanishing))
 	return parts
+
+
+## The strength of the water flowing sideways into `p`.
+func _inflow(p: Vector3i, water: Water) -> int:
+	var l := 1
+	for side in Water.SIDES:
+		var k := water.kind_at(p + side)
+		if k == Water.FLOW or k == Water.SOURCE:
+			l = maxi(l, water.level_at(p + side))
+	return l
 
 
 func _box(size: Vector3, at: Vector3, mat: Material) -> MeshInstance3D:

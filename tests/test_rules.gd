@@ -8,6 +8,23 @@ const DIRS := Solver.DIRS
 
 var failures := 0
 
+## Two levels from the original, kept here so the checks below do not depend
+## on levels.json. Stepping Stone (level1): a gap at x 11 on floor 1, a
+## helper quaggle and cracked tiles on floor 0.
+const STEPPING_STONE := [
+	["         *************", "         *...........*", "         *...........*", "         *...........*",
+		"         *...........*", "         *...........*", "         *......14444*", "         *************"],
+	["**********************", "*.......... .........*", "*s......... .....g...*", "*.......... .........*",
+		"**********************"],
+]
+## Burnt Bridge (level3): a wall of fire before the gap on floor 1.
+const BURNT_BRIDGE := [
+	["         *************", "         *...........*", "         *...........*", "         *...........*",
+		"         *...........*", "         *...........*", "         *......1....*", "         *************"],
+	["**********************", "*.........X .........*", "*s........X .....g...*", "*s........X .........*",
+		"**********************"],
+]
+
 
 func check(ok: bool, what: String) -> void:
 	if not ok:
@@ -33,7 +50,7 @@ func _init() -> void:
 		check(loaded.grid.has(Rules.GOAL), "%s has a goal" % level.id)
 
 	# level1: s at (1,2) floor 1, helper at (16,6) floor 0, gap column x=11, goal (17,2).
-	var r := Rules.load_level("level1")
+	var r := Rules.from_floors("level1", STEPPING_STONE)
 	check(r.quaggles.size() == 2, "level1 has two quaggles")
 	var top: int = 0 if r.quaggles[0].pos.z == 1 else 1
 	r.active = top
@@ -67,12 +84,12 @@ func _init() -> void:
 	check(r.won, "level1 can be won by hand")
 
 	# Cracked tiles crumble behind you; fire kills and goes out.
-	r = Rules.load_level("level1")
+	r = Rules.from_floors("level1", STEPPING_STONE)
 	r.active = 0 if r.quaggles[0].pos.z == 0 else 1
 	r.try_move(1, 0)
 	r.try_move(1, 0)
 	check(r.cell(0, 17, 6) == Rules.EMPTY, "cracked tile crumbled")
-	r = Rules.load_level("level3")
+	r = Rules.from_floors("level3", BURNT_BRIDGE)
 	var walker := -1
 	for q in r.quaggles:
 		if q.pos == Vector3i(1, 2, 1):
