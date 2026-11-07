@@ -40,9 +40,13 @@ can release a flood.
 
 ### Quaggles and water
 
-- **Dams**: a standing (non-swimming) quaggle is solid to flowing and falling
-  water. A stack blocks water on every floor it fills. Falling water that
-  lands on a quaggle's head spreads from there.
+- **Dams**: a standing quaggle is solid to flowing and falling water. A
+  stack blocks water on every floor it fills. Falling water that lands on a
+  quaggle's head spreads from there. Swimmers, and anyone standing on a
+  swimmer, do not dam: otherwise a floated stack's rider could cut off the
+  stream keeping its pit full, and the water would flicker on and off. Since
+  who swims depends on the water, it is worked out starting with no dams and
+  adding those the water shows until there are no new ones.
 - **Pools ignore quaggles**: a pool fills around quaggles in it.
 - **Floating**: a quaggle in deep water rises to the top of the deep water in
   its column, and its stack rides on its head. The riders above the surface
