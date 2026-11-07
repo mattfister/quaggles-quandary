@@ -59,11 +59,14 @@ func play(e: Dictionary, start: float, water: Water) -> float:
 	var changed := {}
 	for c: Dictionary in e.removed + e.added:
 		changed[c.pos] = start + c.delay * RIPPLE
+	var redraw := {}  # Vector3i -> the first time a change touches it
 	for p: Vector3i in changed:
 		for n in [p - Water.UP, p + Vector3i(1, 0, 0), p - Vector3i(1, 0, 0), p + Vector3i(0, 1, 0), p - Vector3i(0, 1, 0)]:
 			var k := water.kind_at(n)
 			if (k == Water.POOL or k == Water.FALL) and _cells.has(n) and not changed.has(n):
-				_swap(n, changed[p], water)
+				redraw[n] = minf(redraw.get(n, INF), changed[p])
+	for n: Vector3i in redraw:
+		_swap(n, redraw[n], water)
 	return longest + GROW
 
 
@@ -80,8 +83,10 @@ func _swap(p: Vector3i, t: float, water: Water) -> void:
 		for o: MeshInstance3D in old:
 			if is_instance_valid(o):
 				o.queue_free()
+		# A later change may already have drained these.
 		for part in parts:
-			part.visible = true)
+			if is_instance_valid(part):
+				part.visible = true)
 
 
 func _place(p: Vector3i, parts: Array[MeshInstance3D]) -> void:
