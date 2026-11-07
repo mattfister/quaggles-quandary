@@ -41,6 +41,7 @@ var _floors: Array[Node3D] = []
 var _quags := {}      # id -> Quaggle
 var _dynamic := {}    # Vector3i -> Array[Node3D]
 var _spinners: Array[Node3D] = []
+var _water: WaterView
 var _focus := Vector3.ZERO
 var _shown := 0       # id the camera and marker follow; trails rules.active
 var _hold := 0.0      # time left before _shown catches up
@@ -173,7 +174,7 @@ func build(r: Rules, reset_camera := true) -> void:
 					_:
 						_group(groups, "tile", slab, shade)
 						match c:
-							Rules.GROUND, Rules.START, Rules.SPAWN: pass
+							Rules.GROUND, Rules.START, Rules.SPAWN, Rules.SOURCE: pass
 							Rules.FIRE: _add_fire(node, p)
 							Rules.KEY: _add_key(node, p)
 							Rules.UP: _add_lift(node, at)
@@ -185,6 +186,10 @@ func build(r: Rules, reset_camera := true) -> void:
 							_: _group(groups, "block", Transform3D(Basis.IDENTITY, at + Vector3(0, 0.35, 0)))
 		for kind: String in groups:
 			_add_multimesh(node, kind, groups[kind], f)
+
+	_water = WaterView.new()
+	_root.add_child(_water)
+	_water.build(r.water, _floors)
 
 	for q in r.quaggles:
 		if q.gone:
@@ -232,12 +237,26 @@ func grid_dir(input: Vector2i) -> Vector2i:
 
 
 ## Animates the events of one move. Returns how long the animation takes.
+## Water plays once every quaggle before it has finished moving, and anyone
+## it floats rises once it has spread.
 func play(events: Array[Dictionary]) -> float:
 	var clock := {}
 	var tweens := {}
 	var slid := {}
 	var leaving: Array[int] = []
+	var water_end := 0.0
 	for e in events:
+		if e.type == "water" or e.id < 0:
+			var start := water_end
+			for t: float in clock.values():
+				start = maxf(start, t)
+			if e.type == "water":
+				water_end = start + _water.play(e, start, rules.water)
+			else:
+				var cell_tw := create_tween()
+				cell_tw.tween_interval(start)
+				cell_tw.tween_callback(_apply_cell.bind(e, _gen))
+			continue
 		var id: int = e.id
 		var quag: Quaggle = _quags.get(id)
 		if quag == null:
@@ -252,7 +271,13 @@ func play(events: Array[Dictionary]) -> float:
 				var to: Vector3i = e.to
 				var kind := "hop"
 				var time := HOP_TIME
-				if to.z < from.z:
+				if e.get("float", false):
+					kind = "rise"
+					time = RISE_TIME
+					if clock[id] < water_end:
+						tw.tween_interval(water_end - clock[id])
+						clock[id] = water_end
+				elif to.z < from.z:
 					kind = "fall"
 					time = FALL_TIME * (from.z - to.z)
 				elif to.z > from.z:
@@ -298,7 +323,7 @@ func play(events: Array[Dictionary]) -> float:
 				clock[id] += 0.3
 	for id in leaving:
 		_quags.erase(id)
-	var total := 0.0
+	var total := water_end
 	for id: int in clock:
 		total = maxf(total, clock[id])
 	if leaving.has(_shown):
