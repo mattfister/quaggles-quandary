@@ -21,6 +21,7 @@ const SPAWN := 49   # '1'  (SPECIAL_1)
 const KEY := 50     # '2'  (SPECIAL_2)
 const FIELD := 51   # '3'  (SPECIAL_3)
 const CRACK := 52   # '4'  (SPECIAL_4)
+const SOURCE := 126 # '~'  a spring: see Water
 
 const UP_ONE := Vector3i(0, 0, 1)
 enum { WALK, SLIDE, CARRIED }
