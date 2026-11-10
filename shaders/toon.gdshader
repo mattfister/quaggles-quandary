@@ -6,9 +6,10 @@ uniform float burn : hint_range(0.0, 1.0) = 0.0;
 
 void fragment() {
 	vec3 c = mix(albedo, vec3(0.03), burn);
-	if (dot(normalize(NORMAL), normalize(VIEW)) < 0.26) {
-		c *= 0.22;
-	}
+	// The rim fades in over about a pixel instead of switching on hard.
+	float facing = dot(normalize(NORMAL), normalize(VIEW));
+	float w = fwidth(facing);
+	c *= mix(0.22, 1.0, smoothstep(0.26 - w, 0.26 + w, facing));
 	ALBEDO = c;
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.0;

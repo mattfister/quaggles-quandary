@@ -173,6 +173,13 @@ func queue_burn(tw: Tween) -> void:
 	tw.tween_callback(hide)
 
 
+func queue_spiked(tw: Tween) -> void:
+	tw.tween_property(_model, "scale", Vector3(1.4, 0.15, 1.4), 0.12).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(0.15)
+	tw.tween_property(_model, "scale", Vector3(0.0, 0.0, 0.0), 0.25).set_ease(Tween.EASE_IN)
+	tw.tween_callback(hide)
+
+
 func queue_fall_out(tw: Tween) -> void:
 	tw.tween_property(self, "position:y", -14.0, 0.7).as_relative() \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)

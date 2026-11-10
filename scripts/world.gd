@@ -1,5 +1,8 @@
 class_name World
 extends Node3D
+
+## A quaggle was clicked (a click, not a drag of the camera).
+signal quaggle_clicked(id: int)
 ## Builds the 3D view of a Rules state and plays back move events.
 ## Grid (x, y, floor) maps to world (-x, floor * H, y), which keeps the
 ## original's on-screen orientation (its camera mirrored the map files).
@@ -59,6 +62,7 @@ var _hold := 0.0      # time left before _shown catches up
 var _gen := 0
 var _time := 0.0
 var _dragging := false
+var _drag_px := 0.0   # how far the mouse has moved since the button went down
 var _turn: Tween
 var _yaw_goal := 0.0
 
@@ -70,6 +74,8 @@ var _ring_mat: StandardMaterial3D
 var _key_mat: StandardMaterial3D
 var _curb_mesh: Mesh
 var _curb_mat: StandardMaterial3D
+var _spike_mesh: Mesh
+var _spike_mat: StandardMaterial3D
 var _field_mat: ShaderMaterial
 
 
@@ -209,6 +215,9 @@ func build(r: Rules, reset_camera := true) -> void:
 					Rules.CURB:
 						_group(groups, "tile", slab, shade, joined)
 						_add_curb(node, at)
+					Rules.SPIKE:
+						_group(groups, "tile", slab, shade, joined)
+						_add_spikes(node, at)
 					_:
 						_group(groups, "tile", slab, shade, joined)
 						match c:
@@ -378,6 +387,11 @@ func play(events: Array[Dictionary]) -> float:
 				quag.queue_burn(tw)
 				clock[id] += 0.55
 				leaving.append(id)
+			"spiked":
+				tw.tween_callback(Sfx.play.bind("bump"))
+				quag.queue_spiked(tw)
+				clock[id] += 0.55
+				leaving.append(id)
 			"fall_out":
 				var from: Vector3i = e.from
 				var to: Vector3i = e.to
@@ -496,11 +510,18 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT or event.button_index == MOUSE_BUTTON_RIGHT:
 			_dragging = event.pressed
+			if event.pressed:
+				_drag_px = 0.0
+			elif event.button_index == MOUSE_BUTTON_LEFT and _drag_px < 6.0:
+				var id := quaggle_at(event.position)
+				if id >= 0:
+					quaggle_clicked.emit(id)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			dist = maxf(5.0, dist * 0.9)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			dist = minf(45.0, dist * 1.1)
 	elif event is InputEventMouseMotion and _dragging:
+		_drag_px += event.relative.length()
 		_stop_turn()
 		yaw -= event.relative.x * 0.008
 		pitch = clampf(pitch + event.relative.y * 0.006, 0.35, 1.5)
@@ -529,6 +550,38 @@ func recenter() -> void:
 	pitch = DEFAULT_PITCH
 	dist = DEFAULT_DIST
 	set_floor_limit(active_floor() + 1)
+
+
+## The id of the quaggle under a point of the screen, the nearest if several
+## overlap, or -1. Each is hit as two spheres, a little generous: body and head.
+func quaggle_at(screen: Vector2) -> int:
+	var origin := _camera.project_ray_origin(screen)
+	var dir := _camera.project_ray_normal(screen)
+	var best := -1
+	var best_t := INF
+	for id: int in _quags:
+		var quag: Quaggle = _quags[id]
+		if rules.quaggles[id].gone or not quag.is_visible_in_tree():
+			continue
+		var body := quag.position + Vector3(0, Quaggle.BODY_R, 0)
+		var head := quag.position + Vector3(0, Quaggle.BODY_R * 2.0 + Quaggle.HEAD_R * 0.5, 0)
+		for sphere: Array in [[body, Quaggle.BODY_R * 1.15], [head, Quaggle.HEAD_R * 1.4]]:
+			var t := _ray_sphere(origin, dir, sphere[0], sphere[1])
+			if t < best_t:
+				best_t = t
+				best = id
+	return best
+
+
+## Distance along a ray to where it first meets a sphere, or INF.
+static func _ray_sphere(origin: Vector3, dir: Vector3, center: Vector3, radius: float) -> float:
+	var oc := origin - center
+	var b := oc.dot(dir)
+	var disc := b * b - (oc.length_squared() - radius * radius)
+	if disc < 0.0:
+		return INF
+	var t := -b - sqrt(disc)
+	return t if t > 0.0 else INF
 
 
 # --- level editor -----------------------------------------------------------
@@ -885,6 +938,32 @@ func _add_curb(parent: Node3D, at: Vector3) -> void:
 
 
 ## A spring's stone basin, there whether it flows or is stopped up.
+## A spike tile's three-by-three bed of steel spikes.
+func _add_spikes(parent: Node3D, at: Vector3) -> void:
+	if _spike_mesh == null:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for i in 3:
+			for j in 3:
+				var cone := CylinderMesh.new()
+				cone.top_radius = 0.0
+				cone.bottom_radius = 0.09
+				cone.height = 0.32
+				cone.radial_segments = 8
+				cone.rings = 1
+				var shift := Vector3((i - 1) * 0.3, cone.height * 0.5, (j - 1) * 0.3)
+				st.append_from(cone, 0, Transform3D(Basis.IDENTITY, shift))
+		_spike_mesh = st.commit()
+		_spike_mat = _flat(Color("c9cedb"), 0.0)
+		_spike_mat.metallic = 0.6
+		_spike_mat.roughness = 0.35
+	var spikes := MeshInstance3D.new()
+	spikes.mesh = _spike_mesh
+	spikes.material_override = _spike_mat
+	spikes.position = at
+	parent.add_child(spikes)
+
+
 func _add_spring(parent: Node3D, at: Vector3) -> void:
 	var stone := _flat(WALL_TOP.lightened(0.15), 0.0)
 	var rim := MeshInstance3D.new()

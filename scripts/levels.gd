@@ -3,12 +3,16 @@ class_name Levels
 ## (scripts/editor) writes that file; it is plain JSON, fine to hand-edit too.
 ##
 ## The file holds a list of sets in play order, each {id, title, label,
-## levels}. Each level is {id, title, hint, floors} plus an optional "stack".
+## levels}. Each level is {id, title, hint, floors} plus an optional "stack"
+## and "review".
 ## "floors" lists each floor bottom-up as rows of cells (see Rules for the
 ## cell characters). "hint", if any, is shown while playing the level.
 ## "stack" is the tallest stack of quaggles the level cannot be won without.
+## "review" is the editor's note on how finished the level is: "ok" (happy
+## with it) or "wip" (in progress); absent means not reviewed yet.
 
 const PATH := "res://levels/levels.json"
+const REVIEWS := ["ok", "wip"]
 
 static var _sets: Array = []
 static var _loaded := false
@@ -110,6 +114,9 @@ static func normalize(level: Dictionary) -> Dictionary:
 	var stack := int(level.get("stack", 1))
 	if stack > 1:
 		out.stack = stack
+	var review := str(level.get("review", ""))
+	if review in REVIEWS:
+		out.review = review
 	return out
 
 
@@ -135,6 +142,8 @@ static func level_json(level: Dictionary, t := "") -> String:
 	])
 	if int(level.get("stack", 1)) > 1:
 		out.append("%s\t\"stack\": %d," % [t, int(level.stack)])
+	if level.get("review", "") in REVIEWS:
+		out.append("%s\t\"review\": %s," % [t, JSON.stringify(level.review)])
 	out.append(t + "\t\"floors\": [")
 	var floors := PackedStringArray()
 	for rows: Array in level.floors:

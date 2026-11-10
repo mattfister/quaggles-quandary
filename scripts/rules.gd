@@ -23,6 +23,7 @@ const FIELD := 51   # '3'  (SPECIAL_3)
 const CRACK := 52   # '4'  (SPECIAL_4)
 const SOURCE := 126 # '~'  a spring: see Water
 const CURB := 94    # '^'  floor with a raised rim that keeps flowing water out
+const SPIKE := 33   # '!'  floor bristling with spikes: water flows over it, quaggles die on it
 
 const UP_ONE := Vector3i(0, 0, 1)
 enum { WALK, SLIDE, CARRIED }
@@ -200,7 +201,7 @@ func riders(q: Dictionary) -> int:
 
 
 func _can_enter(q: Dictionary, c: int) -> bool:
-	return is_walkable(c) or is_air(c) or c == ICE or c == GOAL or (c == FIELD and q.key)
+	return is_walkable(c) or c == SPIKE or is_air(c) or c == ICE or c == GOAL or (c == FIELD and q.key)
 
 
 ## Whether `q` would stay at `p` rather than fall: it is standing in a tile,
@@ -224,6 +225,13 @@ func _has_landing(q: Dictionary, p: Vector3i) -> bool:
 			return true
 		p -= UP_ONE
 	return false
+
+
+## The cell `q` would come to rest in, dropping from `p`.
+func _landing(q: Dictionary, p: Vector3i) -> int:
+	while p.z >= 0 and not _holds(q, p):
+		p -= UP_ONE
+	return cell_at(p)
 
 
 ## `glide` marks a step taken sliding on ice, by the quaggle on the ice and by
@@ -270,7 +278,11 @@ func _step(q: Dictionary, delta: Vector3i, mode: int) -> bool:
 		c = cell_at(new)
 	if _occupied(new) or not _can_enter(q, c):
 		return false
-	if mode == WALK and not _has_landing(q, new):
+	# No one walks onto spikes, or out over a drop onto them; a stack
+	# sliding on ice goes onto them all the same.
+	if c == SPIKE and not (mode == SLIDE or (mode == CARRIED and _gliding)):
+		return false
+	if mode == WALK and (not _has_landing(q, new) or _landing(q, new) == SPIKE):
 		return false
 	if water and _wet_refuses(q, new, not rider.is_empty(), mode):
 		return false
@@ -288,22 +300,24 @@ func _step(q: Dictionary, delta: Vector3i, mode: int) -> bool:
 
 
 ## Whether water keeps `q` out of `p`: a waterfall's base keeps out everyone
-## but a quaggle stepping out from under the water that feeds it; deep water
+## but a quaggle stepping out from under the water that feeds it, and so does
+## the fall over it, for a quaggle walking off a ledge or a head; deep water
 ## (or, walking, landing in it) keeps out anyone `carrying` a stack.
 func _wet_refuses(q: Dictionary, p: Vector3i, carrying: bool, mode: int) -> bool:
-	if water.is_base(p) and not _own_spill(q, p):
-		return true
+	var land := p
+	if mode == WALK:
+		while land.z >= 0 and not _holds({}, land):
+			land -= UP_ONE
+	for b in [p, land]:
+		if water.is_base(b) and not _own_spill(q, b):
+			return true
 	if water.is_deep(p) and _capped(p):
 		return true
 	if not carrying:
 		return false
 	if water.is_deep(p):
 		return true
-	if mode == WALK:
-		while p.z >= 0 and not _holds({}, p):
-			p -= UP_ONE
-		return p.z >= 0 and water.is_deep(p)
-	return false
+	return land.z >= 0 and water.is_deep(land)
 
 
 ## Whether the waterfall landing in `p` is fed only by water lying on the
@@ -327,6 +341,9 @@ func _arrive(q: Dictionary, c: int) -> void:
 			q.dead = true
 			_change_cell(q, q.pos, GROUND)
 			events.append({"type": "burn", "id": q.id})
+		SPIKE:
+			q.dead = true
+			events.append({"type": "spiked", "id": q.id})
 		KEY:
 			# One key at a time: a second one stays where it lies.
 			if not q.key:

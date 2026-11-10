@@ -83,6 +83,12 @@ vec3 crack(vec3 c, vec2 uv) {
 	return mix(crack_color, c, smoothstep(0.018, 0.018 + aa * 1.5, v.x));
 }
 
+// How much of a pixel the outline covers, `line` pixels from the edge: a
+// line 1.25 px wide, blended over a pixel's width with a box filter.
+float outline_cover(float line) {
+	return clamp(1.75 - line, 0.0, 1.0);
+}
+
 void fragment() {
 	vec3 h = size * 0.5;
 	vec3 d = h - abs(lp);
@@ -91,7 +97,9 @@ void fragment() {
 	float ez = d.z + 10.0 * (lp.z > 0.0 ? joined.z : joined.w);
 	// Edge distances in pixels, for the outline (lp is smooth across a face,
 	// unlike ex and ez, which jump where a joined side meets an open one).
-	vec3 px = fwidth(lp);
+	// The true screen gradient, not fwidth, whose sum of |dx| and |dy| thins
+	// lines that run diagonally across the screen.
+	vec3 px = sqrt(dFdx(lp) * dFdx(lp) + dFdy(lp) * dFdy(lp)) + 1e-6;
 	float line;
 	vec3 c;
 	if (abs(ln.y) > 0.5) {
@@ -118,7 +126,7 @@ void fragment() {
 		}
 		line = min(abs(ln.x) > 0.5 ? ez / px.z : ex / px.x, d.y / px.y);
 	}
-	c *= 1.0 - outline * 0.55 * (1.0 - smoothstep(0.6, 1.6, line));
+	c *= 1.0 - outline * 0.55 * outline_cover(line);
 	ALBEDO = c;
 #ifdef FADE
 	ALPHA = 1.0 - fade;

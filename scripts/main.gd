@@ -41,6 +41,7 @@ var undo_stack: Array[Dictionary] = []
 var done := {}
 var volume := 0.8
 var fullscreen := false
+var msaa: int = Viewport.MSAA_4X  # smooths the edges of the 3D scene
 
 var _busy := 0.0
 var _result_pending := false
@@ -76,6 +77,7 @@ var _help: Control
 
 func _ready() -> void:
 	add_child(world)
+	world.quaggle_clicked.connect(_select)
 	_load_progress()
 	_apply_options()
 	_build_ui()
@@ -354,6 +356,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			world.set_floor_limit(world.floor_limit - 1)
 
 
+## Makes the clicked quaggle the active one, as Tab would.
+func _select(id: int) -> void:
+	if not playing or _result.visible or _busy > 0.0 or id == rules.active:
+		return
+	_autoplay.clear()
+	rules.active = id
+	Sfx.play("switch")
+	_update_status()
+
+
 ## Shows the level's hint, or the ? button that brings it back once closed.
 func _show_hint() -> void:
 	var has_hint := _hint_label.text != ""
@@ -415,6 +427,7 @@ func _load_progress() -> void:
 			done[key] = true
 		volume = cfg.get_value("options", "volume", volume)
 		fullscreen = cfg.get_value("options", "fullscreen", fullscreen)
+		msaa = clampi(cfg.get_value("options", "msaa", msaa), Viewport.MSAA_DISABLED, Viewport.MSAA_8X)
 
 
 func _save_progress() -> void:
@@ -422,6 +435,7 @@ func _save_progress() -> void:
 	cfg.set_value("progress", "done", done.keys())
 	cfg.set_value("options", "volume", volume)
 	cfg.set_value("options", "fullscreen", fullscreen)
+	cfg.set_value("options", "msaa", msaa)
 	cfg.save(SAVE_PATH)
 
 
@@ -431,6 +445,7 @@ func _apply_options() -> void:
 	var mode := DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
 	if DisplayServer.window_get_mode() != mode:
 		DisplayServer.window_set_mode(mode)
+	get_viewport().msaa_3d = msaa as Viewport.MSAA
 
 
 # --- UI ---------------------------------------------------------------------
@@ -513,6 +528,17 @@ func _build_ui() -> void:
 		_apply_options()
 		_save_progress())
 	rows.add_child(toggle)
+	rows.add_child(_text("Anti-aliasing", 20))
+	var aa_names := ["Off", "2x", "4x", "8x"]
+	var aa := _button(aa_names[msaa], func() -> void: pass)
+	aa.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	aa.tooltip_text = "Smooths jagged edges. Lower it if the game runs slowly."
+	aa.pressed.connect(func() -> void:
+		msaa = (msaa + 1) % aa_names.size()
+		aa.text = aa_names[msaa]
+		_apply_options()
+		_save_progress())
+	rows.add_child(aa)
 	_reset_button = _button("Reset progress", _reset_progress)
 	options_box.add_child(_centered(_reset_button))
 	options_box.add_child(_centered(_button("Back", show_menu)))

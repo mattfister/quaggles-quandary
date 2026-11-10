@@ -34,6 +34,7 @@ const TILES := [
 	[Rules.FIELD, "Force field", "3", "Solid until a key carrier walks in."],
 	[Rules.CRACK, "Cracked", "4", "Crumbles once you step off it."],
 	[Rules.CURB, "Curb", "^", "Floor with a low rim. Quaggles step over it; flowing water can't cross it, but a filling pool rises over it."],
+	[Rules.SPIKE, "Spikes", "!", "Quaggles won't walk onto them, but sliding or falling onto them kills. Water flows right over them."],
 	[Rules.SOURCE, "Spring", "~", "Water flows 3 cells, falls off edges and fills pits it pours into. Quaggles dam it, stop it up by standing on it, and swim in pools. It puts out fire."],
 	[Rules.UP, "Lift", "u", "Raises whoever steps in (and their stack) one floor."],
 	[Rules.GOAL, "Goal", "g", "Get any quaggle here to win."],
@@ -42,7 +43,7 @@ const TILES := [
 	[Rules.DOWN, "Hole", "d", "Old hole marker: as empty as Empty."],
 ]
 const SHORTCUTS := [
-	["Tiles", "the map character: . * w x X 2 3 4 ~ u g s 1 d, E for empty"],
+	["Tiles", "the map character: . * w x X 2 3 4 ^ ! ~ u g s 1 d, E for empty"],
 	["Tools", "B paint, L line, R rect, T box, F fill, I pick, M select"],
 	["Mouse", "left uses the tool, right erases, Alt + click picks, wheel zooms, middle drag or Space + drag pans"],
 	["3D view", "left uses the tool, Ctrl + click erases, right drag orbits, Shift + right drag pans"],
@@ -158,6 +159,7 @@ var _title_edit: LineEdit
 var _id_edit: LineEdit
 var _hint_edit: TextEdit
 var _stack_spin: SpinBox
+var _review_buttons := {}           # review value -> its toggle in the Level panel
 var _set_option: OptionButton
 var _set_title: LineEdit
 var _set_label: LineEdit
@@ -876,6 +878,7 @@ func new_level() -> void:
 func duplicate_level() -> void:
 	var lv: Dictionary = Levels.normalize(_entry)
 	lv.title = _entry.title + " (copy)"
+	lv.erase("review")
 	var keep := _entry
 	_entry = {}
 	lv.id = _unique_id(keep.id + "_copy")
@@ -1265,6 +1268,21 @@ func _set_stack(n: int) -> void:
 		_entry.erase("stack")
 	_stack_spin.set_value_no_signal(n)
 	_meta_changed()
+
+
+## Marks the level reviewed: "ok" (happy), "wip" (in progress) or "" (not yet).
+func _set_review(r: String) -> void:
+	if r == "":
+		_entry.erase("review")
+	else:
+		_entry.review = r
+	_show_review()
+	_meta_changed()
+
+
+func _show_review() -> void:
+	for r: String in _review_buttons:
+		_review_buttons[r].set_pressed_no_signal(_entry.get("review", "") == r)
 
 
 func _show_solve() -> void:
@@ -1931,6 +1949,13 @@ func _build_right() -> Control:
 	_solve_buttons.append(min_button)
 	stack_row.add_child(min_button)
 	box.add_child(_labelled("Stack", stack_row))
+	var review_row := HBoxContainer.new()
+	for r: Array in [["ok", "✓  Happy", "Totally happy with this level"], ["wip", "?  In progress", "Still working on this level"]]:
+		var b := _toggle(r[1], false, func(on: bool) -> void: _set_review(r[0] if on else ""), r[2] + " (click again to clear)")
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_review_buttons[r[0]] = b
+		review_row.add_child(b)
+	box.add_child(_labelled("Review", review_row))
 	_set_option = OptionButton.new()
 	_set_option.focus_mode = Control.FOCUS_NONE
 	_set_option.item_selected.connect(_move_to_set)
@@ -2094,6 +2119,7 @@ func _fill_fields() -> void:
 	_id_edit.text = _entry.id
 	_hint_edit.text = _entry.hint
 	_stack_spin.set_value_no_signal(_entry.get("stack", 1))
+	_show_review()
 	_set_option.clear()
 	for s: Dictionary in _data:
 		_set_option.add_item(s.title)
@@ -2166,7 +2192,8 @@ func _update_tree_labels() -> void:
 				continue  # the tree is about to be rebuilt
 			var lv: Dictionary = _data[at[0]].levels[at[1]]
 			var changed: bool = not _saved_levels.has(lv._uid) or _saved_levels[lv._uid] != Levels.level_json(lv)
-			item.set_text(0, "%d.  %s%s" % [at[1] + 1, lv.title, "  *" if changed else ""])
+			var mark: String = {"ok": "✓  ", "wip": "?  "}.get(lv.get("review", ""), "")
+			item.set_text(0, "%s%d.  %s%s" % [mark, at[1] + 1, lv.title, "  *" if changed else ""])
 			item.set_tooltip_text(0, "%s%s" % [lv.id, " (unsaved changes)" if changed else ""])
 			item.set_custom_color(0, AMBER.lightened(0.3) if changed else CREAM)
 

@@ -26,11 +26,11 @@ void fragment() {
 	vec3 d = size * 0.5 - abs(lp);
 	float ex = d.x + 10.0 * (lp.x > 0.0 ? joined.x : joined.y);
 	float ez = d.z + 10.0 * (lp.z > 0.0 ? joined.z : joined.w);
-	vec3 px = fwidth(lp);
+	vec3 px = sqrt(dFdx(lp) * dFdx(lp) + dFdy(lp) * dFdy(lp)) + 1e-6;
 	// A wobbly crust line, so the edge looks cooled rather than ruled.
 	float wobble = 0.015 * sin((wp.x - wp.z) * 23.0) * sin((wp.x + wp.z) * 17.0 + TIME * 0.4);
 	c = mix(crust, c, smoothstep(0.0, edge, min(ex, ez) + wobble));
 	float line = min(ex / px.x, ez / px.z);
-	c *= 1.0 - 0.6 * (1.0 - smoothstep(0.6, 1.6, line));
+	c *= 1.0 - 0.6 * clamp(1.75 - line, 0.0, 1.0);
 	ALBEDO = c;
 }

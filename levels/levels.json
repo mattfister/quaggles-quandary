@@ -5,26 +5,29 @@
 			"levels": [
 				{
 					"id": "intro_walk", "title": "First Steps",
-					"hint": "The Quaggles have been banished into sky prisons and need to get home. Use the WASD or Arrow keys to get them to glowing  goal. Getting one Quaggle to the goal is good enough, they believe in collectivism.",
+					"hint": "The Quaggles have been banished into sky prisons by their sworn enemies, the Moon Demons. Quaggles are famously apathetic and need your help to get home. Use the WASD or Arrow keys to get them to the glowing goal. You can always undo with Z or restart with R.",
+					"review": "ok",
 					"floors": [
 						[
 							"",
-							" ... s",
+							" ^.^ s",
 							" . . .",
 							" . g .",
 							" .   .",
-							" ....."
+							" ^.!.^",
+							"  ..."
 						]
 					]
 				},
 				{
 					"id": "intro_drop", "title": "Drop Down",
-					"hint": "Quaggles don't mind falls, as long as there is something to land on. You can rotate the camera by holding down the right mouse button and dragging, or with Q and E.",
+					"hint": "Quaggles don't mind falls, as long as there is something to land on, and its not spikes. You can rotate the camera by holding down the right mouse button and dragging, or with Q and E.",
+					"review": "ok",
 					"floors": [
 						[
 							"* ****",
 							"* **.*",
-							"* **..",
+							"* **.!",
 							"****.g"
 						],
 						[
@@ -37,7 +40,8 @@
 				},
 				{
 					"id": "intro_head", "title": "Lend a Head",
-					"hint": "Press Tab or N to switch Quaggles. They're so chill they don't even mind when someone walks all over them. They can carry other Quaggles too. No sweat!",
+					"hint": "Press Tab or N to switch Quaggles. They're so chill they don't even mind when someone walks all over them. They can carry other Quaggles too. No sweat! Only one Quaggle needs to reach the goal to escape a sky prison. They believe in collectivism.",
+					"review": "ok",
 					"floors": [
 						[
 							"*.*..***",
@@ -55,22 +59,25 @@
 				},
 				{
 					"id": "intro_ice", "title": "Slippery",
-					"hint": "Quaggles can ice skate. This is good for them, because they care about physical fitness.",
+					"hint": "Quaggles can ice skate. This is good for them, because they care about physical fitness. They need to be careful though, they can't stop themselves from skating off cliffs or into spikes.",
+					"review": "ok",
 					"floors": [
 						[
-							"   ......",
-							" s.xxxxx.",
-							"   xx*xx",
-							"   xxxxx",
-							"   x*xxx",
-							"   xxgxx.",
-							"   .xxxx."
+							"  !......",
+							" s.xxxxx^",
+							"  !xx*xx!",
+							"  !xxxxx!",
+							"  !x*xxx!",
+							"  !xxgxx.",
+							"  !.xxxx.",
+							"  !!!! !!"
 						]
 					]
 				},
 				{
 					"id": "intro_key", "title": "Lock and Key",
 					"hint": "Quaggles love freedom and hate barriers. In 10th grade Quaggles learn about symbolism. Keys symbolize freedom. Forcefields symbolize barriers, but are unlocked by keys.",
+					"review": "ok",
 					"floors": [
 						[
 							" *",
@@ -87,6 +94,7 @@
 				{
 					"id": "intro_fire", "title": "Firefighter",
 					"hint": "Fire is a deadly enemy to Quaggles. But Quaggles are so chill and happy to help friends, that they'll even sacrifice themeselves to put out a fire.",
+					"review": "wip",
 					"floors": [
 						[
 							"",
@@ -101,6 +109,7 @@
 				{
 					"id": "intro_douse", "title": "Water Works",
 					"hint": "Some sky prisons are flooded with broken fountains. Water is widely known for its antagonistic effect on fire.  Quaggles like playing in the water, but sometimes it's best just to step aside.",
+					"review": "wip",
 					"floors": [
 						[
 							" .",
@@ -111,6 +120,7 @@
 				{
 					"id": "intro_crack", "title": "Crumbling",
 					"hint": "The sky island prisons that the Quaggles have been trapped in are dangerous, and some of them are downright crumbling.",
+					"review": "wip",
 					"floors": [
 						[
 							"    444443",
@@ -121,7 +131,8 @@
 				},
 				{
 					"id": "intro_lift", "title": "Going Up",
-					"hint": "Quaggles don't use stairs, they are too clumsy. Instead they use magical rings. This is good for them.e",
+					"hint": "Quaggles don't use stairs, they are too clumsy. Instead they use magical rings. This is so they avoid falls and sprains.",
+					"review": "wip",
 					"floors": [
 						[
 							"",
@@ -153,20 +164,24 @@
 				},
 				{
 					"id": "intro_plug", "title": "Stopper",
-					"hint": "Quaggles don't mind shallow water, it helps moisturize, but walking through a waterfall is just unpleasant. Some Quaggles have been known to plug fountains, this is quite pleasant indeed.",
+					"hint": "Quaggles don't mind shallow water, it's moisturizing, but walking through a waterfall is just unpleasant. Some Quaggles have been known to plug fountains, this is quite pleasant indeed.",
+					"review": "wip",
 					"floors": [
 						[
+							" **",
 							"****",
-							"s......g"
+							"s...^..g"
 						],
 						[
-							"  1~"
+							"   ~",
+							"1.!!"
 						]
 					]
 				},
 				{
 					"id": "intro_float", "title": "Rising Tide",
 					"hint": "Quaggles float. Fill a pit with water and whoever is down there comes up with it. Quaggles can't carry anyone while they swim, but they don't mind being stood on.",
+					"review": "ok",
 					"floors": [
 						[
 							"    ***",
@@ -199,6 +214,44 @@
 							"   ^^^^*"
 						]
 					]
+				},
+				{
+					"id": "new_level", "title": "All Together Now",
+					"hint": "This sky prison was designed by the Moon Demons to support solitary confinement. Prove you learned a lot by breaking free.",
+					"floors": [
+						[
+							"  *********",
+							"  *********",
+							"  **.*..***",
+							"  **.....**",
+							"  **.....**",
+							"  *********",
+							"   ********",
+							"    *ux.4.",
+							"    *xxxx!",
+							" ****xxx2x",
+							" .44*xxxxx",
+							" s44*.xxx1",
+							"   xxxxxx",
+							"   *   *"
+						],
+						[
+							"",
+							"   wwww3ww",
+							"   w ~  gw",
+							"   w     w",
+							"   w     w",
+							"   wwwwwww"
+						],
+						[
+							"",
+							"   wwwwwww",
+							"   w     w",
+							"   w     w",
+							"   w     w",
+							"   wwwwwww"
+						]
+					]
 				}
 			]
 		},
@@ -208,6 +261,7 @@
 				{
 					"id": "ferry", "title": "The Heist",
 					"hint": "",
+					"review": "ok",
 					"floors": [
 						[
 							" *..  u**",
@@ -221,38 +275,9 @@
 					]
 				},
 				{
-					"id": "stay_behind", "title": "Stay Behind",
-					"hint": "",
-					"floors": [
-						[
-							".......",
-							"s1.u...",
-							"......."
-						],
-						[
-							"",
-							"    .  .g"
-						]
-					]
-				},
-				{
-					"id": "cold_fire", "title": "Cold Fire",
-					"hint": "",
-					"floors": [
-						[
-							"***********",
-							"*s.xxxxxx.*",
-							"*1.x*xxXx.*",
-							"***xxx*xx**",
-							"*2xxxxxxx**",
-							"***x*xxx3g*",
-							"***********"
-						]
-					]
-				},
-				{
 					"id": "level6", "title": "Ice Forge",
-					"hint": "",
+					"hint": "This forge is used by the Moon Demons to forge the keys used to lock away the Quaggles.",
+					"review": "ok",
 					"floors": [
 						[
 							"          w*w",
@@ -275,6 +300,16 @@
 							"*...xxxxX*x XXXX*....xxxxxxx*xx*33*",
 							"*1..xxxx*xx XXXX*....xxx*xxxxxx*3g*",
 							"*.***************....          ****"
+						],
+						[
+							"                            *******",
+							"                             *    *",
+							"                                  *",
+							"                                  *",
+							"                                  *",
+							"                               wwww",
+							"                               w  w",
+							"                               wwww"
 						]
 					]
 				},
@@ -317,6 +352,30 @@
 							"       *xxxxxxxxxx        x",
 							"                *xxxxxxxxxx",
 							"                          *"
+						]
+					]
+				},
+				{
+					"id": "going_up", "title": "We Both Go Up Together",
+					"hint": "",
+					"stack": 2,
+					"floors": [
+						[
+							"   *****",
+							" 44s1!u*",
+							" 4 ..!.*",
+							" 4  x x",
+							" 4  x x",
+							".xxxxxx.",
+							"..  . .."
+						],
+						[
+							"   *****",
+							"       *",
+							"       *"
+						],
+						[
+							"   g"
 						]
 					]
 				},
@@ -402,40 +461,6 @@
 		{
 			"id": "medium", "title": "Medium Levels", "label": "Medium",
 			"levels": [
-				{
-					"id": "step_stool", "title": "Step Stool",
-					"hint": "From the top of a lift you can step onto a friend's head. They can carry you from there.",
-					"stack": 2,
-					"floors": [
-						[
-							"s1.u",
-							"....",
-							"...."
-						],
-						[
-							"",
-							"",
-							"g"
-						]
-					]
-				},
-				{
-					"id": "going_up", "title": "Going Up Together",
-					"hint": "A lift raises the quaggle who steps in and everyone stacked on top of them.",
-					"stack": 2,
-					"floors": [
-						[
-							"s1.u",
-							"...."
-						],
-						[
-							""
-						],
-						[
-							"  g"
-						]
-					]
-				},
 				{
 					"id": "wall_to_wall", "title": "Wall to Wall",
 					"hint": "",

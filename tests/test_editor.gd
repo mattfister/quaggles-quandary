@@ -241,6 +241,22 @@ func _ready() -> void:
 	check(r.won, "the solution wins")
 	check(e._solve_lines[-1].contains("Needs a stack of 2"), "checks the stack too")
 
+	# Review marks: toggled in the panel, shown in the tree, kept in the file.
+	e._select_id("intro_key")
+	e._review_buttons["wip"].button_pressed = true
+	check(e._entry.get("review") == "wip", "marks a level in progress")
+	e._review_buttons["ok"].button_pressed = true
+	check(e._entry.get("review") == "ok" and not e._review_buttons["wip"].button_pressed, "one review mark at a time")
+	e._rebuild_tree()
+	var marked := e._tree.get_root().get_child(0).get_child(1)
+	check(marked.get_text(0).begins_with("✓"), "the tree shows the mark")
+	check(not e._tree.get_root().get_child(0).get_child(0).get_text(0).begins_with("✓"), "unreviewed levels have no mark")
+	check(Levels.parse(Levels.to_json(e._data))[0].levels[1].get("review") == "ok", "the mark survives the file")
+	e._review_buttons["ok"].button_pressed = false
+	check(not e._entry.has("review"), "clicking again clears the mark")
+	e.revert_all()
+	e.revert_all()
+
 	# Checks.
 	e._select_id("intro_key")
 	e._set_tool(LevelEditor.PAINT)

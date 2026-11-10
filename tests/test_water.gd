@@ -43,6 +43,7 @@ func _init() -> void:
 	rules_water()
 	swimming()
 	floating()
+	spikes()
 	existing_levels()
 	print("FAILURES: %d" % failures)
 	quit(1 if failures else 0)
@@ -203,6 +204,14 @@ func swimming() -> void:
 	r = Rules.from_floors("base", [["...s"], ["~.  "]])
 	walk(r, 0, "l")
 	check(r.quaggles[0].pos == Vector3i(3, 0, 0), "a waterfall's base cannot be walked into")
+	# The spring at (3, 0, 1) pours off the floor-1 ledge at (2, 1, 1) and
+	# (3, 1, 1). Quaggle 1 climbs onto quaggle 0's head, next to the fall.
+	r = Rules.from_floors("leap", [["  *", "****", "s...."], ["   ~", "1.!!"]])
+	walk(r, 0, "r")
+	walk(r, 1, "rd")
+	check(r.quaggles[1].pos == Vector3i(1, 2, 1), "a quaggle stands on a head by a waterfall")
+	walk(r, 1, "r")
+	check(r.quaggles[1].pos == Vector3i(1, 2, 1), "and cannot jump down through it")
 	# A spring on floor 1 pours onto quaggle 0's head; the water spreads and
 	# spills down all round it.
 	r = Rules.from_floors("drenched", [[".....", "..s..", "....."], ["     ", "~.   ", "     "]])
@@ -253,6 +262,33 @@ func floating() -> void:
 	check(r.quaggles[0].pos == Vector3i(2, 1, 1), "the swimmer under the rider is stuck")
 	walk(r, 1, "r")
 	check(r.quaggles[1].pos == Vector3i(3, 1, 1), "the rider steps off into the pool and swims")
+
+
+## Every level loads, with water just where it has a spring, and random play
+func spikes() -> void:
+	var r := Rules.from_floors("spike flow", [["~.!.."]])
+	var w := Water.compute(r)
+	check(w.kind_at(Vector3i(2, 0, 0)) == Water.FLOW and w.kind_at(Vector3i(3, 0, 0)) == Water.FLOW,
+		"water flows over spikes")
+	r = Rules.from_floors("spike pit", [["*****", "*.!.*", "*****"], ["*****", "*   *", "*****"], [" ~   ", "     ", "     "]])
+	w = Water.compute(r)
+	check(w.is_deep(Vector3i(2, 1, 0)) and w.is_deep(Vector3i(2, 1, 1)), "a pool fills over spikes")
+
+	r = Rules.from_floors("spike walk", [["s!."]])
+	check(not r.try_move(1, 0) and r.quaggles[0].pos == Vector3i(0, 0, 0), "no one walks onto spikes")
+	r = Rules.from_floors("spike ledge", [["  !"], ["s. "]])
+	r.try_move(1, 0)
+	check(not r.try_move(1, 0) and r.quaggles[0].pos == Vector3i(1, 0, 1), "or steps off a ledge onto them")
+	r = Rules.from_floors("spike ice", [["sx!"]])
+	r.try_move(1, 0)
+	check(r.quaggles[0].gone and r.quaggles[0].pos == Vector3i(2, 0, 0), "sliding onto spikes kills")
+	r = Rules.from_floors("spike fall", [["  !"], ["sx "]])
+	r.try_move(1, 0)
+	check(r.quaggles[0].gone and r.quaggles[0].pos == Vector3i(2, 0, 0), "falling onto spikes kills")
+	r = Rules.from_floors("spike rider", [["  !", "   "], ["sx ", "   "], ["   ", "1  "]])
+	walk(r, 1, "u")
+	walk(r, 0, "r")
+	check(r.quaggles[0].gone and r.quaggles[1].gone, "a stack sliding off onto spikes dies together")
 
 
 ## Every level loads, with water just where it has a spring, and random play
